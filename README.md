@@ -1,1 +1,0 @@
-# AUS2_Semestralka_MH
