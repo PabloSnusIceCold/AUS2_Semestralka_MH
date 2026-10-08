@@ -8,8 +8,8 @@ import java.util.List;
  *
  * Koreň reprezentuje celú oblasť zadanú na začiatku (rozsah kľúčov).
  * Ak oblasť obsahuje viac ako 1 záznam, delí sa na 4 kvadranty, až kým
- * nie je v každej oblasti najviac 1 záznam, alebo kým ďalšie delenie nie je
- * možné.
+ * nie je v každej oblasti najviac 1 záznam, alebo kým nie je dosiahnutá
+ * maximálna povolená výška stromu (maxDepth). Koreň má hĺbku 0.
  *
  * @param <T> typ dát uložených v strome
  */
@@ -18,7 +18,7 @@ public class QuadTree<T> {
     private final QuadComparator<T> comparator;
     private final T lowerBound;
     private final T upperBound;
-    private final double minSize;
+    private final int maxDepth;
     private final QuadNode<T> root;
 
     /**
@@ -26,10 +26,14 @@ public class QuadTree<T> {
      *                   a delenie na polovicu
      * @param lowerBound dolná hranica rozsahu kľúčov (minimá v oboch dimenziách)
      * @param upperBound horná hranica rozsahu kľúčov (maximá v oboch dimenziách)
-     * @param minSize    minimálna veľkosť oblasti: ak je rozdiel hraníc oblasti
-     *                   v niektorej dimenzii <= minSize, oblasť sa už nedelí
+     * @param maxDepth   maximálna povolená výška stromu (hĺbka uzla, ktorý sa ešte
+     *                   smie deliť, je menšia ako maxDepth); po jej dosiahnutí sa
+     *                   oblasť už nedelí a záznam sa pridá do zoznamu vo vrchole
      */
-    public QuadTree(QuadComparator<T> comparator, T lowerBound, T upperBound, double minSize) {
+    public QuadTree(QuadComparator<T> comparator, T lowerBound, T upperBound, int maxDepth) {
+        if (maxDepth < 0) {
+            throw new IllegalArgumentException("maxDepth musi byt >= 0");
+        }
         if (comparator == null) {
             throw new IllegalArgumentException("comparator nesmie byt null");
         }
@@ -39,7 +43,7 @@ public class QuadTree<T> {
         this.comparator = comparator;
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
-        this.minSize = minSize;
+        this.maxDepth = maxDepth;
         this.root = new QuadNode<>(lowerBound, upperBound);
     }
 
@@ -54,11 +58,13 @@ public class QuadTree<T> {
             throw new IllegalArgumentException("bod lezi mimo rozsahu stromu");
         }
         QuadNode<T> node = root;
+        // root ma hlbku 0
+        int depth = 0;
         while (true) {
             if (node.isLeaf()) {
                 // prázdna oblasť (iba koreň na začiatku) alebo list s jedným záznamom
                 if (node.getRecords().isEmpty() || hasSameKey(node.getRecords().getFirst(), data)
-                        || !canSplit(node)) {
+                        || depth >= maxDepth) {
                     node.getRecords().add(data);
                     return;
                 }
@@ -76,6 +82,7 @@ public class QuadTree<T> {
                 return;
             }
             node = child;
+            depth++;
         }
     }
 
@@ -91,16 +98,6 @@ public class QuadTree<T> {
         child.getRecords().addAll(node.getRecords());
         node.getRecords().clear();
         node.setChild(quadrant, child);
-    }
-
-    /** O(1) – oblasť sa dá deliť, ak je v oboch dimenziách väčšia ako minSize. */
-    private boolean canSplit(QuadNode<T> node) {
-        for (int d = 0; d < DIMENSIONS; d++) {
-            if (comparator.difference(node.getLowerBound(), node.getUpperBound(), d) <= minSize) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /** O(1) – majú dva záznamy rovnaké kľúče vo všetkých dimenziách? */
@@ -155,7 +152,7 @@ public class QuadTree<T> {
      *
      * Časová zložitosť: O(v * (1 + r)), kde v je počet navštívených uzlov,
      * ktorých oblasti sa prekrývajú s S a r je priemerný počet záznamov v uzle;
-     * najhoršie O(n), ak S pokrýva celý strom. Výška je O(log(rozsah/minSize)).
+     * najhoršie O(n), ak S pokrýva celý strom. Výška je najviac maxDepth.
      * Pamäťová zložitosť: O(h) pre explicitný zásobník (nie rekurzia; v každom
      * uzle max. 4 potomkovia, teda zásobník má najviac 3h + 1 prvkov) + O(m) pre
      * výsledok, kde m je počet nájdených záznamov.
