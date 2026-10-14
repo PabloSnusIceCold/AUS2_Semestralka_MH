@@ -110,7 +110,7 @@ public class TreeTester {
         int expected = 0;
         for (Point2D p : ref) {
             if (p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2) {
-                mark[p.id] = stamp;
+                mark[p.id] = stamp; // stav "ocakavany" - bod ma byt vo vysledku a strom ho este nevratil
                 expected++;
             }
         }
@@ -121,10 +121,10 @@ public class TreeTester {
             if (e == null || e.id < 0 || e.id >= ref.size() || ref.get(e.id) != e) {
                 throw new AssertionError(where + "vrateny objekt nebol vlozeny: " + e);
             }
-            if (mark[e.id] != stamp) {
+            if (mark[e.id] != stamp) { // bod nema byt vo vysledku (nie je v intervale)
                 throw new AssertionError(where + "objekt " + e + " je mimo intervalu alebo je vrateny viackrat");
             }
-            mark[e.id] = stamp + 1;
+            mark[e.id] = stamp + 1; // stav "vrateny" - bod ma byt vo vysledku a strom ho uz vratil
         }
         return used;
     }

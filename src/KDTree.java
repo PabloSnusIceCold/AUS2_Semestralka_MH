@@ -126,12 +126,12 @@ public class KDTree<T> {
             // ak je aktualna dimenzia 0 a celkova je 2 tak potom, 0(X) +1 % 2 = 1,
             // dalsia dimenzia ktoru budeme prehladavat bude 1(Y)
             int nextDimension = (dimension + 1) % dimensions;
-            // Ľavý podstrom obsahuje hodnoty < uzol v dimenzii:
-            // ide sa doň iba ak lower < uzol.
+            // Ľavý podstrom obsahuje hodnoty <= uzol v dimenzii:
+            // ide sa doň iba ak lower <= uzol.
             boolean goLeft = node.getLeft() != null
                     && comparator.compare(lower, node.getData(), dimension) <= 0;
-            // Pravý podstrom obsahuje hodnoty >= uzol:
-            // ide sa doň iba ak upper >= uzol.
+            // Pravý podstrom obsahuje hodnoty > uzol:
+            // ide sa doň iba ak upper > uzol.
             boolean goRight = node.getRight() != null
                     && comparator.compare(upper, node.getData(), dimension) > 0;
 
