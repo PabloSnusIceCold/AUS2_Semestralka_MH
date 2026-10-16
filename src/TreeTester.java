@@ -13,17 +13,22 @@ import java.util.Random;
  * vsetky zaznamy.
  *
  * Pouzitie: java TreeTester [--structure kd|quad|all] [--ops N] [--pInsert P]
- * [--range R] [--pDup P] [--maxDepth D] [--seed S]
+ * [--range R] [--pDup P] [--maxDepth D] [--verifyEvery N] [--seed S]
  */
 public class TreeTester {
     // nastavenia z prikazoveho riadku
     static String structure = "all";
-    static int ops = 100_000;
+    static int ops = 1_000_000;
     static double pInsertOption = -1; // -1 = prednastavene scenare
     static int rangeOption = 1_000_000;
     static double pDup = 0.05;
     static int maxDepth = 20;
     static long seed = 12345;
+    static int verifyEveryOption = 100000; // --verifyEvery: overuje sa kazdy N-ty Find v nahodnych operaciach
+
+    // overovanie Find: kazdy verifyEvery-ty Find sa porovna s referenciou
+    static int verifyEvery = 1;
+    static int findCounter = 0;
 
     // aktualne testovany strom a referencne zaznamy
     static boolean useKd;
@@ -102,6 +107,9 @@ public class TreeTester {
         String where = ctx + " [" + x1 + "," + y1 + "]-[" + x2 + "," + y2 + "]: ";
         if (result == null) {
             throw new AssertionError(where + "find vratil null");
+        }
+        if (++findCounter % verifyEvery != 0) { // zvysok po deleni ak je 0 tak sa urobi overenie
+            return used;
         }
         if (mark.length < ref.size()) {
             mark = new int[Math.max(ref.size(), mark.length * 2)];
@@ -211,15 +219,20 @@ public class TreeTester {
         newTree(range);
         Random rnd = new Random(seed);
         int finds = 0;
-        for (int i = 0; i < count; i++) {
-            if (rnd.nextDouble() < pInsert) {
-                int[] c = randomPoint(rnd, range, dup);
-                add(c[0], c[1]);
-            } else {
-                int[] iv = randomInterval(rnd, range);
-                find(iv[0], iv[1], iv[2], iv[3], "operacia #" + i);
-                finds++;
+        verifyEvery = verifyEveryOption; // iba pocas nahodnych operacii
+        try {
+            for (int i = 0; i < count; i++) {
+                if (rnd.nextDouble() < pInsert) {
+                    int[] c = randomPoint(rnd, range, dup);
+                    add(c[0], c[1]);
+                } else {
+                    int[] iv = randomInterval(rnd, range);
+                    find(iv[0], iv[1], iv[2], iv[3], "operacia #" + i);
+                    finds++;
+                }
             }
+        } finally {
+            verifyEvery = 1; // zaverecna kontrola a dalsie testy overuju vzdy vsetko
         }
         for (int i = 0; i < 300; i++) { // zaverecna kontrola
             int[] iv = randomInterval(rnd, range);
@@ -421,6 +434,8 @@ public class TreeTester {
         System.out.println("  --range R                suradnice v [0, R] (predvolene 1000000)");
         System.out.println("  --pDup P                 pravdepodobnost duplicitneho bodu (predvolene 0.05)");
         System.out.println("  --maxDepth D             maximalna vyska Quad stromu (predvolene 20)");
+        System.out.println(
+                "  --verifyEvery N          v nahodnych operaciach overit iba kazdy N-ty Find (N >= 1, predvolene 1)");
         System.out.println("  --seed S                 seed generatora (predvolene 12345)");
     }
 
@@ -434,11 +449,13 @@ public class TreeTester {
                     case "--range" -> rangeOption = Integer.parseInt(args[++i]);
                     case "--pDup" -> pDup = Double.parseDouble(args[++i]);
                     case "--maxDepth" -> maxDepth = Integer.parseInt(args[++i]);
+                    case "--verifyEvery" -> verifyEveryOption = Integer.parseInt(args[++i]);
                     case "--seed" -> seed = Long.parseLong(args[++i]);
                     default -> throw new IllegalArgumentException("neznama moznost " + args[i]);
                 }
             }
             if (ops < 1 || rangeOption < 10 || maxDepth < 0 || pDup < 0 || pDup > 1 || pInsertOption > 1
+                    || verifyEveryOption < 1
                     || !(structure.equals("kd") || structure.equals("quad") || structure.equals("all"))) {
                 throw new IllegalArgumentException("neplatne hodnoty argumentov");
             }
