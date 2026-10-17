@@ -1,3 +1,5 @@
+// Trieda KDNode.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 /**
  * Uzol K-D stromu (analógia BstNode&lt;T&gt;). Obsahuje iba dáta typu T
  * a referencie na ľavého a pravého syna.

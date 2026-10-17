@@ -1,3 +1,5 @@
+// Trieda Point2D.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 /**
  * Jednoduchý 2D bod používaný testerom. Identita objektu je dôležitá: tester
  * porovnáva výsledky Find s referenčnými výsledkami po konkrétnych objektoch

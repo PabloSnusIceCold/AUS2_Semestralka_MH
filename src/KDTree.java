@@ -1,3 +1,5 @@
+// Trieda KDTree.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 import java.util.LinkedList;
 import java.util.List;
 

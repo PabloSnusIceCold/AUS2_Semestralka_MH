@@ -1,6 +1,9 @@
+// Trieda QuadComparator.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 /**
  * Funkcia (rozhranie) zabezpečujúca univerzálnosť kľúča pre Quad strom.
- * Strom nepozná vnútornú štruktúru dát typu T. Vyžaduje od nej iba tri operácie:
+ * Strom nepozná vnútornú štruktúru dát typu T. Vyžaduje od nej iba tri
+ * operácie:
  * porovnanie, rozdiel hodnôt a rozdelenie oblasti na polovicu.
  *
  * Quad strom je dvojrozmerný, preto sa používajú iba dimenzie

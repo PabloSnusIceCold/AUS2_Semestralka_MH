@@ -1,6 +1,9 @@
+// Trieda KDComparator.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 /**
  * Porovnávacia funkcia pre K-D strom. Zabezpečuje univerzálnosť kľúča:
- * strom nepozná vnútornú štruktúru dát typu T, iba ich porovnáva v danej dimenzii.
+ * strom nepozná vnútornú štruktúru dát typu T, iba ich porovnáva v danej
+ * dimenzii.
  *
  * @param <T> typ dát uložených v strome
  */

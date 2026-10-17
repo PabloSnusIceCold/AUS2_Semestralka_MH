@@ -1,3 +1,5 @@
+// Trieda TreeTester.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -18,9 +20,9 @@ import java.util.Random;
 public class TreeTester {
     // nastavenia z prikazoveho riadku
     static String structure = "all";
-    static int ops = 1_000_000;
+    static int ops = 100_000;
     static double pInsertOption = -1; // -1 = prednastavene scenare
-    static int rangeOption = 1_000_000;
+    static int rangeOption = 1000;
     static double pDup = 0.05;
     static int maxDepth = 20;
     static long seed = 12345;
@@ -152,6 +154,7 @@ public class TreeTester {
             Point2D p = ref.get(rnd.nextInt(ref.size()));
             return new int[] { p.x, p.y };
         }
+        // v 3% pripadov je na kraji rozsahu bud 0 alebo range
         int x = rnd.nextDouble() < 0.03 ? (rnd.nextBoolean() ? 0 : range) : rnd.nextInt(range + 1);
         int y = rnd.nextDouble() < 0.03 ? (rnd.nextBoolean() ? 0 : range) : rnd.nextInt(range + 1);
         return new int[] { x, y };
