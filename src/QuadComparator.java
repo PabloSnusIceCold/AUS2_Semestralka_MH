@@ -4,7 +4,7 @@
  * Funkcia (rozhranie) zabezpečujúca univerzálnosť kľúča pre Quad strom.
  * Strom nepozná vnútornú štruktúru dát typu T. Vyžaduje od nej iba tri
  * operácie:
- * porovnanie, rozdiel hodnôt a rozdelenie oblasti na polovicu.
+ * porovnanie, rozdelenie oblasti na polovicu a skombinovanie dvoch objektov.
  *
  * Quad strom je dvojrozmerný, preto sa používajú iba dimenzie
  * 0 (napr. X) a 1 (napr. Y).
@@ -19,13 +19,6 @@ public interface QuadComparator<T> {
      *         rovný alebo väčší ako b v dimenzii dimension
      */
     int compare(T a, T b, int dimension);
-
-    /**
-     * Rozdiel hodnôt dvoch kľúčov v zadanej dimenzii (b - a).
-     * Používa sa na zistenie veľkosti oblasti, a teda aj na rozhodnutie,
-     * či je ďalšie delenie oblasti ešte možné.
-     */
-    double difference(T a, T b, int dimension);
 
     /**
      * Rozdelenie oblasti na polovicu: vráti objekt typu T, ktorého hodnota

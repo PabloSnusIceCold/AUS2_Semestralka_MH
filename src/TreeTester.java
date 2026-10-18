@@ -65,10 +65,6 @@ public class TreeTester {
                 return d == 0 ? Integer.compare(a.x, b.x) : Integer.compare(a.y, b.y);
             }
 
-            public double difference(Point2D a, Point2D b, int d) {
-                return d == 0 ? (double) b.x - a.x : (double) b.y - a.y;
-            }
-
             public Point2D middle(Point2D lower, Point2D upper) {
                 return new Point2D(lower.x + (upper.x - lower.x) / 2, lower.y + (upper.y - lower.y) / 2, -1);
             }
