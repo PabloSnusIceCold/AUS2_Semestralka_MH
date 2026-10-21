@@ -6,7 +6,8 @@ import java.util.Locale;
 import java.util.Random;
 
 /**
- * CLI tester pre K-D strom a Quad strom (operacie Insert a Find).
+ * CLI tester pre K-D strom, Quad strom a Quad strom s K-D stromom vo vrcholoch
+ * (operacie Insert a Find).
  *
  * Vsetky vlozene body sa ukladaju do referencneho ArrayListu. Vysledok Find sa
  * porovnava s linearnym prehladanim tohto zoznamu, pricom sa musia zhodovat
@@ -14,28 +15,30 @@ import java.util.Random;
  * funkcie, aby sa overilo, ze Find vyuziva priestorove delenie a neprehlada
  * vsetky zaznamy.
  *
- * Pouzitie: java TreeTester [--structure kd|quad|all] [--ops N] [--pInsert P]
+ * Pouzitie: java TreeTester [--structure kd|quad|quadkd|all] [--ops N]
+ * [--pInsert P]
  * [--range R] [--pDup P] [--maxDepth D] [--verifyEvery N] [--seed S]
  */
 public class TreeTester {
     // nastavenia z prikazoveho riadku
-    static String structure = "all";
-    static int ops = 100_000;
+    static String structure = "all"; // testovana struktura: "kd", "quad" alebo "quadkd"
+    static int ops = 100_000; // pocet nahodnych operacii (Insert/Find)
     static double pInsertOption = -1; // -1 = prednastavene scenare
-    static int rangeOption = 1000;
-    static double pDup = 0.05;
-    static int maxDepth = 20;
-    static long seed = 12345;
-    static int verifyEveryOption = 100000; // --verifyEvery: overuje sa kazdy N-ty Find v nahodnych operaciach
+    static int rangeOption = 1000; // velkost suradnicove priestoru
+    static double pDup = 0.05; // pravdepodobnost ze sa vlozi duplikat
+    static int maxDepth = 20; // maximalna hlbka Quad stromu
+    static long seed = 12345; // seed pre nahodne cisla
+    static int verifyEveryOption = 1000; // --verifyEvery: overuje sa kazdy N-ty Find v nahodnych operaciach
 
     // overovanie Find: kazdy verifyEvery-ty Find sa porovna s referenciou
     static int verifyEvery = 1;
     static int findCounter = 0;
 
     // aktualne testovany strom a referencne zaznamy
-    static boolean useKd;
+    static String current; // prave testovana struktura: "kd", "quad" alebo "quadkd"
     static KDTree<Point2D> kd;
     static QuadTree<Point2D> quad;
+    static QuadKDTree<Point2D> quadKd;
     static long calls; // pocet volani porovnavacej funkcie
     static ArrayList<Point2D> ref = new ArrayList<>();
     static int[] mark = new int[1024];
@@ -52,14 +55,15 @@ public class TreeTester {
      */
     static void newTree(int range) {
         ref.clear();
-        if (useKd) {
+        if (current.equals("kd")) {
             kd = new KDTree<>(2, (a, b, d) -> {
                 calls++;
                 return d == 0 ? Integer.compare(a.x, b.x) : Integer.compare(a.y, b.y);
             });
             return;
         }
-        QuadComparator<Point2D> comparator = new QuadComparator<>() {
+        // jeden komparator pre Quad strom aj Quad strom s K-D stromom vo vrcholoch
+        QuadKDComparator<Point2D> comparator = new QuadKDComparator<>() {
             public int compare(Point2D a, Point2D b, int d) {
                 calls++;
                 return d == 0 ? Integer.compare(a.x, b.x) : Integer.compare(a.y, b.y);
@@ -73,7 +77,13 @@ public class TreeTester {
                 return new Point2D(xSource.x, ySource.y, -1);
             }
         };
-        quad = new QuadTree<>(comparator, new Point2D(0, 0, -1), new Point2D(range, range, -1), maxDepth);
+        Point2D lowerBound = new Point2D(0, 0, -1);
+        Point2D upperBound = new Point2D(range, range, -1);
+        if (current.equals("quad")) {
+            quad = new QuadTree<>(comparator, lowerBound, upperBound, maxDepth);
+        } else {
+            quadKd = new QuadKDTree<>(comparator, lowerBound, upperBound, maxDepth);
+        }
     }
 
     /**
@@ -82,10 +92,12 @@ public class TreeTester {
     static Point2D add(int x, int y) {
         Point2D p = new Point2D(x, y, ref.size());
         ref.add(p);
-        if (useKd) {
+        if (current.equals("kd")) {
             kd.insert(p);
-        } else {
+        } else if (current.equals("quad")) {
             quad.insert(p);
+        } else {
+            quadKd.insert(p);
         }
         return p;
     }
@@ -100,7 +112,8 @@ public class TreeTester {
         Point2D lower = new Point2D(x1, y1, -1);
         Point2D upper = new Point2D(x2, y2, -1);
         calls = 0;
-        List<Point2D> result = useKd ? kd.find(lower, upper) : quad.find(lower, upper);
+        List<Point2D> result = current.equals("kd") ? kd.find(lower, upper)
+                : current.equals("quad") ? quad.find(lower, upper) : quadKd.find(lower, upper);
         long used = calls;
         String where = ctx + " [" + x1 + "," + y1 + "]-[" + x2 + "," + y2 + "]: ";
         if (result == null) {
@@ -426,7 +439,7 @@ public class TreeTester {
 
     static void printUsage() {
         System.out.println("Pouzitie: java TreeTester [moznosti]");
-        System.out.println("  --structure kd|quad|all  testovana struktura (predvolene all)");
+        System.out.println("  --structure kd|quad|quadkd|all  testovana struktura (predvolene all)");
         System.out.println("  --ops N                  pocet nahodnych operacii na scenar (predvolene 100000)");
         System.out.println("  --pInsert P              pravdepodobnost Insert (0..1), zvysok je Find;");
         System.out.println("                           bez neho bezia scenare 0, 0.1, 0.5, 0.9 a 1.0");
@@ -455,7 +468,8 @@ public class TreeTester {
             }
             if (ops < 1 || rangeOption < 10 || maxDepth < 0 || pDup < 0 || pDup > 1 || pInsertOption > 1
                     || verifyEveryOption < 1
-                    || !(structure.equals("kd") || structure.equals("quad") || structure.equals("all"))) {
+                    || !(structure.equals("kd") || structure.equals("quad") || structure.equals("quadkd")
+                            || structure.equals("all"))) {
                 throw new IllegalArgumentException("neplatne hodnoty argumentov");
             }
         } catch (RuntimeException e) {
@@ -467,13 +481,17 @@ public class TreeTester {
         long start = System.nanoTime();
         System.out.println("TreeTester: structure=" + structure + ", ops=" + ops + ", range=" + rangeOption
                 + ", seed=" + seed);
-        if (!structure.equals("quad")) {
-            useKd = true;
+        if (structure.equals("kd") || structure.equals("all")) {
+            current = "kd";
             testStructure("K-D strom");
         }
-        if (!structure.equals("kd")) {
-            useKd = false;
+        if (structure.equals("quad") || structure.equals("all")) {
+            current = "quad";
             testStructure("Quad strom (maxDepth = " + maxDepth + ")");
+        }
+        if (structure.equals("quadkd") || structure.equals("all")) {
+            current = "quadkd";
+            testStructure("Quad strom s K-D stromom vo vrcholoch (maxDepth = " + maxDepth + ")");
         }
         System.out.printf(Locale.ROOT, "%nVysledok: %d uspesnych, %d neuspesnych (%.1f s)%n", passed, failed,
                 (System.nanoTime() - start) / 1e9);
