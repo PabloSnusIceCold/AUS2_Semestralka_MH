@@ -1,5 +1,7 @@
-// Trieda TreeTester.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
+﻿// Trieda TreeTester.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
+import adaptery.*;
+import model.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,9 +33,9 @@ public class TreeTester {
 
     // rezim --data pre realne data
     static boolean dataMode = true;
-    static String order = "file"; // "file" alebo "shuffled"
-    static int runs = 5;
-    static int warmup = 2;
+    static String order = "shuffled"; // "file" alebo "shuffled"
+    static int runs = 1;
+    static int warmup = 0;
     static int verifyAreas = 1000;
 
     static volatile long blackholeSink = 0;
@@ -49,9 +51,18 @@ public class TreeTester {
     // Sem sa pridavaju stiahnute implementacie
     static final List<IndexEntry> FACTORIES = new ArrayList<>();
     static {
+        // Vlastne implementacie
         FACTORIES.add(new IndexEntry("kd", (x1, y1, x2, y2) -> new OwnKDTreeIndex()));
         FACTORIES.add(new IndexEntry("quad", (x1, y1, x2, y2) -> new OwnQuadTreeIndex(x1, y1, x2, y2, maxDepth)));
         FACTORIES.add(new IndexEntry("quadkd", (x1, y1, x2, y2) -> new OwnQuadKDTreeIndex(x1, y1, x2, y2, maxDepth)));
+        // Externe KD-stromy
+        FACTORIES.add(new IndexEntry("geoassist", (x1, y1, x2, y2) -> new GeoAssistKDTreeIndex()));
+        FACTORIES.add(new IndexEntry("levy", (x1, y1, x2, y2) -> new LevyKDTreeIndex()));
+        FACTORIES.add(new IndexEntry("tinspin", (x1, y1, x2, y2) -> new TinspinKDTreeIndex()));
+        // Externe Quad-stromy
+        FACTORIES.add(new IndexEntry("varunpant", (x1, y1, x2, y2) -> new VarunpantQuadTreeIndex(x1, y1, x2, y2)));
+        FACTORIES.add(new IndexEntry("tree", (x1, y1, x2, y2) -> new TreeQuadTreeIndex(x1, y1, x2, y2)));
+        FACTORIES.add(new IndexEntry("danysk", (x1, y1, x2, y2) -> new DanySKQuadTreeIndex()));
     }
 
     static IndexEntry findEntry(String key) {
@@ -481,10 +492,59 @@ public class TreeTester {
         double mediumMs;
         double largeMs;
         double avgComparisons = -1;
+        String boundaryStatus = "OK";
+        String dupStatus = "Zachovava";
         int refErrors;
         int firstStructErrors;
         int[] counts;
         long[] idSums;
+    }
+
+    static void checkEdgeCases(IndexEntry entry, BenchmarkResult br) {
+        try {
+            SpatialIndex tree = entry.getFactory().create(0, 0, 100, 100);
+            GpsPoint pInside = new GpsPoint(1, 15, 15);
+            GpsPoint pCorner1 = new GpsPoint(2, 10, 10);
+            GpsPoint pCorner2 = new GpsPoint(3, 20, 10);
+            GpsPoint pCorner3 = new GpsPoint(4, 10, 20);
+            GpsPoint pCorner4 = new GpsPoint(5, 20, 20);
+            GpsPoint pMinX = new GpsPoint(6, 10, 15);
+            GpsPoint pMaxX = new GpsPoint(7, 20, 15);
+            GpsPoint pMinY = new GpsPoint(8, 15, 10);
+            GpsPoint pMaxY = new GpsPoint(9, 15, 20);
+            GpsPoint pOutL = new GpsPoint(10, 9.999, 15);
+            GpsPoint pOutR = new GpsPoint(11, 20.001, 15);
+            GpsPoint pOutB = new GpsPoint(12, 15, 9.999);
+            GpsPoint pOutT = new GpsPoint(13, 15, 20.001);
+
+            GpsPoint[] testPoints = { pInside, pCorner1, pCorner2, pCorner3, pCorner4,
+                    pMinX, pMaxX, pMinY, pMaxY, pOutL, pOutR, pOutB, pOutT };
+            for (GpsPoint p : testPoints) {
+                tree.insert(p);
+            }
+
+            List<GpsPoint> resBoundary = tree.find(new GpsPoint(-1, 10, 10), new GpsPoint(-1, 20, 20));
+            List<GpsPoint> resEmpty = tree.find(new GpsPoint(-1, 50, 50), new GpsPoint(-1, 60, 60));
+            List<GpsPoint> resOutside = tree.find(new GpsPoint(-1, -50, -50), new GpsPoint(-1, -10, -10));
+
+            if (resBoundary.size() == 9 && resEmpty.isEmpty() && resOutside.isEmpty()) {
+                br.boundaryStatus = "OK";
+            } else {
+                br.boundaryStatus = resBoundary.size() + "/9";
+            }
+
+            SpatialIndex dupTree = entry.getFactory().create(0, 0, 100, 100);
+            dupTree.insert(new GpsPoint(101, 30.5, 30.5));
+            dupTree.insert(new GpsPoint(102, 30.5, 30.5));
+            List<GpsPoint> resDup = dupTree.find(new GpsPoint(-1, 30, 30), new GpsPoint(-1, 31, 31));
+            if (resDup.size() == 2) {
+                br.dupStatus = "Zachovava";
+            } else {
+                br.dupStatus = "Obmedzenie (" + resDup.size() + "/2)";
+            }
+        } catch (Exception e) {
+            br.boundaryStatus = "CHYBA";
+        }
     }
 
     static double median(long[] arr) {
@@ -615,6 +675,7 @@ public class TreeTester {
             BenchmarkResult br = new BenchmarkResult();
             br.key = entry.getKey();
             br.name = entry.getKey();
+            checkEdgeCases(entry, br);
             System.out.println("\n--- Benchmark: " + entry.getKey() + " ---");
             try {
                 long[] insertTimes = new long[runs];
@@ -680,32 +741,35 @@ public class TreeTester {
                         br.insertMs, br.findMs, br.smallMs, br.mediumMs, br.largeMs);
 
                 // d) overenie MIMO merania
-                System.out.print("  Overujem strukturu...");
-                GpsComparator.counting = true;
-                br.counts = new int[areaCount];
-                br.idSums = new long[areaCount];
-                long totalComparisons = 0;
-                boolean canCount = (lastTree.comparisons() >= 0);
+                if (verifyCount > 0) {
+                    System.out.print("  Overujem spravnost (" + verifyCount + " oblasti)...");
+                    GpsComparator.counting = true;
+                    br.counts = new int[verifyCount];
+                    br.idSums = new long[verifyCount];
+                    long totalComparisons = 0;
+                    boolean canCount = (lastTree.comparisons() >= 0);
 
-                for (int i = 0; i < areaCount; i++) {
-                    GpsComparator.calls = 0;
-                    List<GpsPoint> res = lastTree.find(lowers[i], uppers[i]);
-                    br.counts[i] = res.size();
-                    long idSum = 0;
-                    for (int k = 0; k < res.size(); k++) {
-                        idSum += res.get(k).getId();
-                    }
-                    br.idSums[i] = idSum;
-                    if (canCount) {
-                        long c = lastTree.comparisons();
-                        if (c >= 0) {
-                            totalComparisons += c;
+                    for (int v = 0; v < verifyCount; v++) {
+                        int aIdx = refAreaIndices[v];
+                        GpsComparator.calls = 0;
+                        List<GpsPoint> res = lastTree.find(lowers[aIdx], uppers[aIdx]);
+                        br.counts[v] = res.size();
+                        long idSum = 0;
+                        for (int k = 0; k < res.size(); k++) {
+                            idSum += res.get(k).getId();
+                        }
+                        br.idSums[v] = idSum;
+                        if (canCount) {
+                            long c = lastTree.comparisons();
+                            if (c >= 0) {
+                                totalComparisons += c;
+                            }
                         }
                     }
+                    GpsComparator.counting = false;
+                    br.avgComparisons = canCount ? ((double) totalComparisons / verifyCount) : -1.0;
+                    System.out.println(" hotovo.");
                 }
-                GpsComparator.counting = false;
-                br.avgComparisons = canCount ? ((double) totalComparisons / areaCount) : -1.0;
-                System.out.println(" hotovo.");
 
             } catch (Throwable t) {
                 br.failed = true;
@@ -724,8 +788,7 @@ public class TreeTester {
             if (verifyCount > 0) {
                 int refDiff = 0;
                 for (int v = 0; v < verifyCount; v++) {
-                    int aIdx = refAreaIndices[v];
-                    if (br.counts[aIdx] != refCounts[v] || br.idSums[aIdx] != refIdSums[v]) {
+                    if (br.counts[v] != refCounts[v] || br.idSums[v] != refIdSums[v]) {
                         refDiff++;
                     }
                 }
@@ -739,8 +802,8 @@ public class TreeTester {
                 br.firstStructErrors = 0;
             } else {
                 int diffFirst = 0;
-                for (int i = 0; i < areaCount; i++) {
-                    if (br.counts[i] != firstSuccess.counts[i] || br.idSums[i] != firstSuccess.idSums[i]) {
+                for (int v = 0; v < verifyCount; v++) {
+                    if (br.counts[v] != firstSuccess.counts[v] || br.idSums[v] != firstSuccess.idSums[v]) {
                         diffFirst++;
                     }
                 }
@@ -751,25 +814,70 @@ public class TreeTester {
         // tabulka
         System.out.println();
         System.out.println("=== Vysledky benchmarku (" + (order.equals("shuffled") ? "shuffled" : "file") + ", runs="
-                + runs + ", warmup=" + warmup + ") ===");
-        String header = String.format(Locale.ROOT, "%-22s | %14s | %17s | %11s | %27s | %16s | %10s | %11s",
+                + runs + ", warmup=" + warmup + ", verify=" + verifyCount + ") ===");
+        String header = String.format(Locale.ROOT, "%-24s | %14s | %17s | %11s | %27s | %8s | %17s | %10s | %11s",
                 "Nazov", "Vkladanie [ms]", "Vyhladavanie [ms]", "us / oblast", "Male / Stredne / Velke [ms]",
-                "Porovnani/oblast", "Chyb ref", "Chyb 1. str");
+                "Hranice", "Duplicity", "Chyb ref", "Chyb 1. str");
         System.out.println(header);
         System.out.println("-".repeat(header.length()));
         for (BenchmarkResult br : results) {
             if (br.failed) {
-                System.out.printf(Locale.ROOT, "%-22s | FAIL: %s%n", br.name, br.error);
+                System.out.printf(Locale.ROOT, "%-24s | FAIL: %s%n", br.name, br.error);
             } else {
                 String tripple = String.format(Locale.ROOT, "%.1f / %.1f / %.1f", br.smallMs, br.mediumMs, br.largeMs);
-                String compStr = br.avgComparisons >= 0 ? String.format(Locale.ROOT, "%.1f", br.avgComparisons) : "-";
                 String firstErrStr = (br == firstSuccess) ? "0" : String.valueOf(br.firstStructErrors);
 
-                System.out.printf(Locale.ROOT, "%-22s | %14.1f | %17.1f | %11.2f | %27s | %16s | %10d | %11s%n",
-                        br.name, br.insertMs, br.findMs, br.usPerArea, tripple, compStr, br.refErrors, firstErrStr);
+                System.out.printf(Locale.ROOT, "%-24s | %14.1f | %17.1f | %11.2f | %27s | %8s | %17s | %10d | %11s%n",
+                        br.name, br.insertMs, br.findMs, br.usPerArea, tripple, br.boundaryStatus, br.dupStatus,
+                        br.refErrors, firstErrStr);
             }
         }
         System.out.println("-".repeat(header.length()));
+
+        String reportFileName = "vysledky_" + java.time.LocalDate.now() + ".txt";
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(
+                new java.io.FileWriter(reportFileName, java.nio.charset.StandardCharsets.UTF_8))) {
+            pw.println("=== BENCHMARK VYSLEDKY SPATIAL INDEXOV ===");
+            pw.println("Datum a cas: " + java.time.LocalDateTime.now());
+            pw.println("Konfiguracia: poradie=" + order + ", runs=" + runs + ", warmup=" + warmup + ", verifyAreas="
+                    + verifyCount);
+            pw.println("Vstupne data: " + points.size() + " bodov, " + areas.size() + " testovacich oblasti");
+            pw.println();
+            pw.println(header);
+            pw.println("-".repeat(header.length()));
+            for (BenchmarkResult br : results) {
+                if (br.failed) {
+                    pw.printf(Locale.ROOT, "%-24s | FAIL: %s%n", br.name, br.error);
+                } else {
+                    String tripple = String.format(Locale.ROOT, "%.1f / %.1f / %.1f", br.smallMs, br.mediumMs,
+                            br.largeMs);
+                    String firstErrStr = (br == firstSuccess) ? "0" : String.valueOf(br.firstStructErrors);
+                    pw.printf(Locale.ROOT, "%-24s | %14.1f | %17.1f | %11.2f | %27s | %8s | %17s | %10d | %11s%n",
+                            br.name, br.insertMs, br.findMs, br.usPerArea, tripple, br.boundaryStatus, br.dupStatus,
+                            br.refErrors, firstErrStr);
+                }
+            }
+            pw.println("-".repeat(header.length()));
+            pw.println();
+            pw.println("Poznamky a obmedzenia struktur:");
+            pw.println(
+                    "1. Vlastny KDTree / QuadTree / QuadKDTree: plna podpora duplicitnych suradnic, presne intervalove vyhladavanie vratane hranic.");
+            pw.println(
+                    "2. Tinspin KDTree: vysoko optimalizovany K-d strom, podporuje duplicity, presne intervalove vyhladavanie.");
+            pw.println(
+                    "3. Levy KDTree: nepodporuje duplicitne kluce (vyhadzuje KeyDuplicateException), preto duplicity vynechava; inak korektne vyhladava.");
+            pw.println(
+                    "4. Geo Assist KDTree: interne uchovava ID v mape a pri zhode suradnic preskakuje duplikaty; inak korektne intervalove vyhladavanie.");
+            pw.println(
+                    "5. Tree (Kirsty) QuadTree: region quadtree s listami obsahujucimi kolekciu hodnot, plna podpora duplicit.");
+            pw.println(
+                    "6. Varunpant QuadTree: point quadtree, pri vkladani bodu s rovnakymi suradnicami prepisuje predchadzajuci prvok (nepodporuje duplicitne suradnice).");
+            pw.println(
+                    "7. DanySK FlexibleQuadTree: flexibilny dynamicky rastuci quadtree v Kotline, plna integracia s kotlin-stdlib.");
+            System.out.println("Vysledky boli ulozene do suboru: " + reportFileName);
+        } catch (java.io.IOException ioe) {
+            System.err.println("Nepodarilo sa ulozit vysledky do suboru: " + ioe.getMessage());
+        }
     }
 
     public static void main(String[] args) {

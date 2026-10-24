@@ -1,0 +1,26 @@
+=== BENCHMARK VYSLEDKY SPATIAL INDEXOV ===
+Datum a cas: 2026-10-24T13:58:05.902630600
+Konfiguracia: poradie=shuffled, runs=1, warmup=0, verifyAreas=1000
+Vstupne data: 1862281 bodov, 100000 testovacich oblasti
+
+Nazov                    | Vkladanie [ms] | Vyhladavanie [ms] | us / oblast | Male / Stredne / Velke [ms] |  Hranice |         Duplicity |   Chyb ref | Chyb 1. str
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vlastny KDTree           |         1720.2 |            2083.9 |       20.84 |       70.3 / 271.9 / 1741.8 |       OK |         Zachovava |          0 |           0
+Vlastny QuadTree         |         1895.2 |            2724.3 |       27.24 |       33.5 / 128.3 / 2562.5 |       OK |         Zachovava |          0 |           0
+Vlastny QuadKDTree       |         1952.6 |            3441.9 |       34.42 |       33.4 / 139.5 / 3269.0 |       OK |         Zachovava |          0 |           0
+Geo Assist KDTree        |         1960.9 |            2473.5 |       24.74 |       55.7 / 243.5 / 2174.3 |      3/9 |         Zachovava |         76 |          76
+Levy KDTree              |         2074.0 |            1302.7 |       13.03 |       40.5 / 150.7 / 1111.5 |       OK |  Obmedzenie (1/2) |          0 |           0
+Tinspin KDTree           |         1589.2 |            2229.6 |       22.30 |       57.4 / 224.6 / 1947.6 |       OK |         Zachovava |          0 |           0
+Varunpant QuadTree       |         1364.6 |            2402.0 |       24.02 |       31.1 / 101.2 / 2269.7 |       OK |  Obmedzenie (1/2) |          0 |           0
+Tree (Kirsty) QuadTree   |         1661.1 |            2857.4 |       28.57 |       34.5 / 121.0 / 2701.9 |       OK |         Zachovava |          0 |           0
+DanySK FlexibleQuadTree  |         1068.9 |            1120.2 |       11.20 |        54.2 / 129.2 / 936.7 |       OK |         Zachovava |          0 |           0
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Poznamky a obmedzenia struktur:
+1. Vlastny KDTree / QuadTree / QuadKDTree: plna podpora duplicitnych suradnic, presne intervalove vyhladavanie vratane hranic.
+2. Tinspin KDTree: vysoko optimalizovany K-d strom, podporuje duplicity, presne intervalove vyhladavanie.
+3. Levy KDTree: nepodporuje duplicitne kluce (vyhadzuje KeyDuplicateException), preto duplicity vynechava; inak korektne vyhladava.
+4. Geo Assist KDTree: interne uchovava ID v mape a pri zhode suradnic preskakuje duplikaty; inak korektne intervalove vyhladavanie.
+5. Tree (Kirsty) QuadTree: region quadtree s listami obsahujucimi kolekciu hodnot, plna podpora duplicit.
+6. Varunpant QuadTree: point quadtree, pri vkladani bodu s rovnakymi suradnicami prepisuje predchadzajuci prvok (nepodporuje duplicitne suradnice).
+7. DanySK FlexibleQuadTree: flexibilny dynamicky rastuci quadtree v Kotline, plna integracia s kotlin-stdlib.

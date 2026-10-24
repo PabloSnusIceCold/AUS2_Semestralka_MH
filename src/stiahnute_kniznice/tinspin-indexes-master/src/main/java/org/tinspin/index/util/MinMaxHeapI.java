@@ -1,0 +1,70 @@
+*
+ * Copyright 2009-2023 Tilmann Zaeschke. All rights reserved.
+ *
+ * This file is part of TinSpin.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.tinspin.index.util;
+
+/**
+ * MinMAxHeap interface.
+ *
+ * @param <T> entry type
+ */
+public interface MinMaxHeapI<T> {
+
+  /**
+   * Add entry.
+   *
+   * @param value new entry
+   */
+  void push(T value);
+
+  /** Remove min entry. */
+  void popMin();
+
+  /** Remove max entry. */
+  void popMax();
+
+  /**
+   * Look at min entry.
+   *
+   * @return min entry
+   */
+  T peekMin();
+
+  /**
+   * Look at max entry.
+   *
+   * @return max entry
+   */
+  T peekMax();
+
+  /**
+   * Number of entries.
+   *
+   * @return number of entries
+   */
+  int size();
+
+  /**
+   * Check if heap is empty.
+   *
+   * @return 'true' if empty
+   */
+  boolean isEmpty();
+
+  /** Remove all entries. */
+  void clear();
+}

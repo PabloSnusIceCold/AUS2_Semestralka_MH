@@ -1,0 +1,9 @@
+.buildpath
+*.idea
+.idea/
+target/
+.ipr
+.iml
+.iws
+# Mac crap
+.DS_Store
