@@ -1,27 +1,26 @@
 // Trieda TreeTester.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
 /**
- * CLI tester pre K-D strom, Quad strom a Quad strom s K-D stromom vo vrcholoch
+ * CLI tester priestorovych indexov implementujucich rozhranie SpatialIndex
  * (operacie Insert a Find).
  *
- * Vsetky vlozene body sa ukladaju do referencneho ArrayListu. Vysledok Find sa
- * porovnava s linearnym prehladanim tohto zoznamu, pricom sa musia zhodovat
- * konkretne objekty (identita), nie iba pocet. Pocitaju sa volania porovnavacej
- * funkcie, aby sa overilo, ze Find vyuziva priestorove delenie a neprehlada
- * vsetky zaznamy.
+ * Podporuje synteticke testy aj benchmark na realnych datach (--data).
  *
- * Pouzitie: java TreeTester [--structure kd|quad|quadkd|all] [--ops N]
- * [--pInsert P]
- * [--range R] [--pDup P] [--maxDepth D] [--verifyEvery N] [--seed S]
+ * Pouzitie: java TreeTester [--structure <kluc>|all] [--ops N]
+ * [--pInsert P] [--range R] [--pDup P] [--maxDepth D] [--verifyEvery N] [--seed
+ * S]
+ * [--data] [--order file|shuffled] [--runs N] [--warmup N] [--verifyAreas N]
  */
 public class TreeTester {
     // nastavenia z prikazoveho riadku
-    static String structure = "all"; // testovana struktura: "kd", "quad" alebo "quadkd"
+    static String structure = "all"; // testovana struktura: kluc z FACTORIES alebo "all"
     static int ops = 100_000; // pocet nahodnych operacii (Insert/Find)
     static double pInsertOption = -1; // -1 = prednastavene scenare
     static int rangeOption = 1000; // velkost suradnicove priestoru
@@ -30,17 +29,41 @@ public class TreeTester {
     static long seed = 12345; // seed pre nahodne cisla
     static int verifyEveryOption = 1000; // --verifyEvery: overuje sa kazdy N-ty Find v nahodnych operaciach
 
+    // rezim --data pre realne data
+    static boolean dataMode = true;
+    static String order = "file"; // "file" alebo "shuffled"
+    static int runs = 5;
+    static int warmup = 2;
+    static int verifyAreas = 1000;
+
+    static volatile long blackholeSink = 0;
+
     // overovanie Find: kazdy verifyEvery-ty Find sa porovna s referenciou
     static int verifyEvery = 1;
     static int findCounter = 0;
 
     // aktualne testovany strom a referencne zaznamy
-    static String current; // prave testovana struktura: "kd", "quad" alebo "quadkd"
-    static KDTree<Point2D> kd;
-    static QuadTree<Point2D> quad;
-    static QuadKDTree<Point2D> quadKd;
-    static long calls; // pocet volani porovnavacej funkcie
-    static ArrayList<Point2D> ref = new ArrayList<>();
+    static String current; // prave testovana struktura
+    static SpatialIndex index;
+
+    // Sem sa pridavaju stiahnute implementacie
+    static final List<IndexEntry> FACTORIES = new ArrayList<>();
+    static {
+        FACTORIES.add(new IndexEntry("kd", (x1, y1, x2, y2) -> new OwnKDTreeIndex()));
+        FACTORIES.add(new IndexEntry("quad", (x1, y1, x2, y2) -> new OwnQuadTreeIndex(x1, y1, x2, y2, maxDepth)));
+        FACTORIES.add(new IndexEntry("quadkd", (x1, y1, x2, y2) -> new OwnQuadKDTreeIndex(x1, y1, x2, y2, maxDepth)));
+    }
+
+    static IndexEntry findEntry(String key) {
+        for (IndexEntry entry : FACTORIES) {
+            if (entry.getKey().equals(key)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    static ArrayList<GpsPoint> ref = new ArrayList<>();
     static int[] mark = new int[1024];
     static int stamp = 1;
 
@@ -55,50 +78,17 @@ public class TreeTester {
      */
     static void newTree(int range) {
         ref.clear();
-        if (current.equals("kd")) {
-            kd = new KDTree<>(2, (a, b, d) -> {
-                calls++;
-                return d == 0 ? Integer.compare(a.x, b.x) : Integer.compare(a.y, b.y);
-            });
-            return;
-        }
-        // jeden komparator pre Quad strom aj Quad strom s K-D stromom vo vrcholoch
-        QuadKDComparator<Point2D> comparator = new QuadKDComparator<>() {
-            public int compare(Point2D a, Point2D b, int d) {
-                calls++;
-                return d == 0 ? Integer.compare(a.x, b.x) : Integer.compare(a.y, b.y);
-            }
-
-            public Point2D middle(Point2D lower, Point2D upper) {
-                return new Point2D(lower.x + (upper.x - lower.x) / 2, lower.y + (upper.y - lower.y) / 2, -1);
-            }
-
-            public Point2D combine(Point2D xSource, Point2D ySource) {
-                return new Point2D(xSource.x, ySource.y, -1);
-            }
-        };
-        Point2D lowerBound = new Point2D(0, 0, -1);
-        Point2D upperBound = new Point2D(range, range, -1);
-        if (current.equals("quad")) {
-            quad = new QuadTree<>(comparator, lowerBound, upperBound, maxDepth);
-        } else {
-            quadKd = new QuadKDTree<>(comparator, lowerBound, upperBound, maxDepth);
-        }
+        GpsComparator.counting = true;
+        index = findEntry(current).getFactory().create(0, 0, range, range);
     }
 
     /**
      * Vlozi novy bod do stromu aj do referencneho zoznamu (id = pozicia v zozname).
      */
-    static Point2D add(int x, int y) {
-        Point2D p = new Point2D(x, y, ref.size());
+    static GpsPoint add(int x, int y) {
+        GpsPoint p = new GpsPoint(ref.size(), x, y);
         ref.add(p);
-        if (current.equals("kd")) {
-            kd.insert(p);
-        } else if (current.equals("quad")) {
-            quad.insert(p);
-        } else {
-            quadKd.insert(p);
-        }
+        index.insert(p);
         return p;
     }
 
@@ -109,12 +99,11 @@ public class TreeTester {
      * @return pocet porovnani vykonanych stromom pocas Find
      */
     static long find(int x1, int y1, int x2, int y2, String ctx) {
-        Point2D lower = new Point2D(x1, y1, -1);
-        Point2D upper = new Point2D(x2, y2, -1);
-        calls = 0;
-        List<Point2D> result = current.equals("kd") ? kd.find(lower, upper)
-                : current.equals("quad") ? quad.find(lower, upper) : quadKd.find(lower, upper);
-        long used = calls;
+        GpsPoint lower = new GpsPoint(-1, x1, y1);
+        GpsPoint upper = new GpsPoint(-1, x2, y2);
+        GpsComparator.calls = 0;
+        List<GpsPoint> result = index.find(lower, upper);
+        long used = index.comparisons();
         String where = ctx + " [" + x1 + "," + y1 + "]-[" + x2 + "," + y2 + "]: ";
         if (result == null) {
             throw new AssertionError(where + "find vratil null");
@@ -127,23 +116,26 @@ public class TreeTester {
         }
         stamp += 2;
         int expected = 0;
-        for (Point2D p : ref) {
-            if (p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2) {
-                mark[p.id] = stamp; // stav "ocakavany" - bod ma byt vo vysledku a strom ho este nevratil
+        for (GpsPoint p : ref) {
+            int px = (int) p.getX();
+            int py = (int) p.getY();
+            if (px >= x1 && px <= x2 && py >= y1 && py <= y2) {
+                mark[(int) p.getId()] = stamp; // stav "ocakavany" - bod ma byt vo vysledku a strom ho este nevratil
                 expected++;
             }
         }
         if (result.size() != expected) {
             throw new AssertionError(where + "pocet " + result.size() + " != ocakavany " + expected);
         }
-        for (Point2D e : result) {
-            if (e == null || e.id < 0 || e.id >= ref.size() || ref.get(e.id) != e) {
+        for (GpsPoint e : result) {
+            if (e == null || e.getId() < 0 || e.getId() >= ref.size() || ref.get((int) e.getId()) != e) {
                 throw new AssertionError(where + "vrateny objekt nebol vlozeny: " + e);
             }
-            if (mark[e.id] != stamp) { // bod nema byt vo vysledku (nie je v intervale)
+            int id = (int) e.getId();
+            if (mark[id] != stamp) { // bod nema byt vo vysledku (nie je v intervale)
                 throw new AssertionError(where + "objekt " + e + " je mimo intervalu alebo je vrateny viackrat");
             }
-            mark[e.id] = stamp + 1; // stav "vrateny" - bod ma byt vo vysledku a strom ho uz vratil
+            mark[id] = stamp + 1; // stav "vrateny" - bod ma byt vo vysledku a strom ho uz vratil
         }
         return used;
     }
@@ -160,8 +152,8 @@ public class TreeTester {
      */
     static int[] randomPoint(Random rnd, int range, double dup) {
         if (!ref.isEmpty() && rnd.nextDouble() < dup) {
-            Point2D p = ref.get(rnd.nextInt(ref.size()));
-            return new int[] { p.x, p.y };
+            GpsPoint p = ref.get(rnd.nextInt(ref.size()));
+            return new int[] { (int) p.getX(), (int) p.getY() };
         }
         // v 3% pripadov je na kraji rozsahu bud 0 alebo range
         int x = rnd.nextDouble() < 0.03 ? (rnd.nextBoolean() ? 0 : range) : rnd.nextInt(range + 1);
@@ -186,16 +178,20 @@ public class TreeTester {
             x2 = x1 + rnd.nextInt(range / 5 + 2);
             y2 = y1 + rnd.nextInt(range / 5 + 2);
         } else if (kind < 0.72 && !ref.isEmpty()) { // bodovy interval na existujucom bode
-            Point2D p = ref.get(rnd.nextInt(ref.size()));
-            x1 = x2 = p.x;
-            y1 = y2 = p.y;
+            GpsPoint p = ref.get(rnd.nextInt(ref.size()));
+            x1 = x2 = (int) p.getX();
+            y1 = y2 = (int) p.getY();
         } else if (kind < 0.84 && !ref.isEmpty()) { // hranice presne na suradniciach bodov
-            Point2D p = ref.get(rnd.nextInt(ref.size()));
-            Point2D q = ref.get(rnd.nextInt(ref.size()));
-            x1 = Math.min(p.x, q.x);
-            y1 = Math.min(p.y, q.y);
-            x2 = Math.min(Math.max(p.x, q.x), x1 + range / 4);
-            y2 = Math.min(Math.max(p.y, q.y), y1 + range / 4);
+            GpsPoint p = ref.get(rnd.nextInt(ref.size()));
+            GpsPoint q = ref.get(rnd.nextInt(ref.size()));
+            int px = (int) p.getX();
+            int py = (int) p.getY();
+            int qx = (int) q.getX();
+            int qy = (int) q.getY();
+            x1 = Math.min(px, qx);
+            y1 = Math.min(py, qy);
+            x2 = Math.min(Math.max(px, qx), x1 + range / 4);
+            y2 = Math.min(Math.max(py, qy), y1 + range / 4);
         } else if (kind < 0.90) { // tenka ciara (vodorovna alebo zvisla)
             x2 = x1 + rnd.nextInt(2);
             y2 = y1 + rnd.nextInt(range / 3 + 1);
@@ -261,6 +257,10 @@ public class TreeTester {
      */
     static void efficiencyTest(int n, int range, long seed) {
         newTree(range);
+        if (index.comparisons() < 0) {
+            System.out.println("      preskocene");
+            return;
+        }
         Random rnd = new Random(seed);
         for (int i = 0; i < n; i++) {
             add(rnd.nextInt(range + 1), rnd.nextInt(range + 1));
@@ -406,9 +406,11 @@ public class TreeTester {
             newTree(R);
             Random rnd = new Random(11);
             for (int i = 0; i < 400; i++) {
-                Point2D p = add(rnd.nextInt(60), rnd.nextInt(60));
-                find(p.x, p.y, p.x, p.y, "po vlozeni (bodovy interval)");
-                find(p.x - 5, p.y - 5, p.x + 5, p.y + 5, "po vlozeni (okolie)");
+                GpsPoint p = add(rnd.nextInt(60), rnd.nextInt(60));
+                int px = (int) p.getX();
+                int py = (int) p.getY();
+                find(px, py, px, py, "po vlozeni (bodovy interval)");
+                find(px - 5, py - 5, px + 5, py + 5, "po vlozeni (okolie)");
             }
             findAll(R, "priebezne vkladanie");
         });
@@ -438,8 +440,16 @@ public class TreeTester {
     }
 
     static void printUsage() {
+        StringBuilder keys = new StringBuilder();
+        for (IndexEntry entry : FACTORIES) {
+            if (keys.length() > 0) {
+                keys.append("|");
+            }
+            keys.append(entry.getKey());
+        }
+        keys.append("|all");
         System.out.println("Pouzitie: java TreeTester [moznosti]");
-        System.out.println("  --structure kd|quad|quadkd|all  testovana struktura (predvolene all)");
+        System.out.println("  --structure " + keys + "  testovana struktura (predvolene all)");
         System.out.println("  --ops N                  pocet nahodnych operacii na scenar (predvolene 100000)");
         System.out.println("  --pInsert P              pravdepodobnost Insert (0..1), zvysok je Find;");
         System.out.println("                           bez neho bezia scenare 0, 0.1, 0.5, 0.9 a 1.0");
@@ -449,6 +459,317 @@ public class TreeTester {
         System.out.println(
                 "  --verifyEvery N          v nahodnych operaciach overit iba kazdy N-ty Find (N >= 1, predvolene 1)");
         System.out.println("  --seed S                 seed generatora (predvolene 12345)");
+        System.out.println("  --data                   spusti benchmark na realnych datach");
+        System.out.println("  --order file|shuffled    poradie vkladania bodov (predvolene file)");
+        System.out.println("  --runs N                 pocet meranych behov benchmarku (N >= 1, predvolene 5)");
+        System.out.println("  --warmup N               pocet zahrievacich behov (N >= 0, predvolene 2)");
+        System.out.println(
+                "  --verifyAreas N          pocet overovanych oblasti voci referencii (N >= 0, predvolene 1000)");
+    }
+
+    // ----------------------------------------------------------- rezim --data
+
+    static class BenchmarkResult {
+        String key;
+        String name;
+        boolean failed;
+        String error;
+        double insertMs;
+        double findMs;
+        double usPerArea;
+        double smallMs;
+        double mediumMs;
+        double largeMs;
+        double avgComparisons = -1;
+        int refErrors;
+        int firstStructErrors;
+        int[] counts;
+        long[] idSums;
+    }
+
+    static double median(long[] arr) {
+        if (arr.length == 0) {
+            return 0.0;
+        }
+        long[] copy = arr.clone();
+        Arrays.sort(copy);
+        int mid = copy.length / 2;
+        if (copy.length % 2 == 1) {
+            return copy[mid] / 1e6;
+        } else {
+            return (copy[mid - 1] + copy[mid]) / 2.0 / 1e6;
+        }
+    }
+
+    static void runDataBenchmark() {
+        System.out.println("Nacitavam body a oblasti...");
+        List<GpsPoint> points = DataLoader.loadNodes();
+        List<Area> areas = DataLoader.loadAreas();
+        if (order.equals("shuffled")) {
+            Collections.shuffle(points, new Random(seed));
+        }
+        System.out.printf(Locale.ROOT, "Nacitanych %d bodov a %d oblasti (poradie: %s).%n",
+                points.size(), areas.size(), order);
+
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < points.size(); i++) {
+            GpsPoint p = points.get(i);
+            if (p.getX() < minX)
+                minX = p.getX();
+            if (p.getY() < minY)
+                minY = p.getY();
+            if (p.getX() > maxX)
+                maxX = p.getX();
+            if (p.getY() > maxY)
+                maxY = p.getY();
+        }
+
+        int areaCount = areas.size();
+        GpsPoint[] lowers = new GpsPoint[areaCount];
+        GpsPoint[] uppers = new GpsPoint[areaCount];
+        for (int i = 0; i < areaCount; i++) {
+            Area a = areas.get(i);
+            lowers[i] = new GpsPoint(-1, a.getMinX(), a.getMinY());
+            uppers[i] = new GpsPoint(-1, a.getMaxX(), a.getMaxY());
+        }
+
+        int[] cat = new int[areaCount];
+        double[] areaSizes = new double[areaCount];
+        Integer[] orderIdx = new Integer[areaCount];
+        for (int i = 0; i < areaCount; i++) {
+            Area a = areas.get(i);
+            areaSizes[i] = (a.getMaxX() - a.getMinX()) * (a.getMaxY() - a.getMinY());
+            orderIdx[i] = i;
+        }
+        Arrays.sort(orderIdx, (i1, i2) -> Double.compare(areaSizes[i1], areaSizes[i2]));
+        int third = areaCount / 3;
+        for (int rank = 0; rank < areaCount; rank++) {
+            int orig = orderIdx[rank];
+            if (rank < third) {
+                cat[orig] = 0; // male
+            } else if (rank < 2 * third) {
+                cat[orig] = 1; // stredne
+            } else {
+                cat[orig] = 2; // velke
+            }
+        }
+
+        int verifyCount = (verifyAreas > 0) ? Math.min(verifyAreas, areaCount) : 0;
+        int[] refAreaIndices = new int[verifyCount];
+        int[] refCounts = new int[verifyCount];
+        long[] refIdSums = new long[verifyCount];
+
+        if (verifyCount > 0) {
+            int step = Math.max(1, areaCount / verifyCount);
+            int pSize = points.size();
+            double[] xs = new double[pSize];
+            double[] ys = new double[pSize];
+            long[] ids = new long[pSize];
+            for (int p = 0; p < pSize; p++) {
+                GpsPoint pt = points.get(p);
+                xs[p] = pt.getX();
+                ys[p] = pt.getY();
+                ids[p] = pt.getId();
+            }
+            System.out.printf(Locale.ROOT, "Pocitam referenciu pre %d overovanych oblasti (krok = %d)...%n",
+                    verifyCount, step);
+            long refT0 = System.nanoTime();
+            for (int v = 0; v < verifyCount; v++) {
+                int aIdx = v * step;
+                if (aIdx >= areaCount)
+                    aIdx = areaCount - 1;
+                refAreaIndices[v] = aIdx;
+                Area a = areas.get(aIdx);
+                double ax1 = a.getMinX();
+                double ay1 = a.getMinY();
+                double ax2 = a.getMaxX();
+                double ay2 = a.getMaxY();
+                int cnt = 0;
+                long sum = 0;
+                for (int p = 0; p < pSize; p++) {
+                    double px = xs[p];
+                    double py = ys[p];
+                    if (px >= ax1 && px <= ax2 && py >= ay1 && py <= ay2) {
+                        cnt++;
+                        sum += ids[p];
+                    }
+                }
+                refCounts[v] = cnt;
+                refIdSums[v] = sum;
+            }
+            System.out.printf(Locale.ROOT, "Referencia dopocitana (%.2f s).%n", (System.nanoTime() - refT0) / 1e9);
+        }
+
+        List<IndexEntry> entriesToTest = new ArrayList<>();
+        for (IndexEntry entry : FACTORIES) {
+            if (structure.equals("all") || structure.equals(entry.getKey())) {
+                entriesToTest.add(entry);
+            }
+        }
+
+        List<BenchmarkResult> results = new ArrayList<>();
+        for (IndexEntry entry : entriesToTest) {
+            BenchmarkResult br = new BenchmarkResult();
+            br.key = entry.getKey();
+            br.name = entry.getKey();
+            System.out.println("\n--- Benchmark: " + entry.getKey() + " ---");
+            try {
+                long[] insertTimes = new long[runs];
+                long[] smallTimes = new long[runs];
+                long[] mediumTimes = new long[runs];
+                long[] largeTimes = new long[runs];
+
+                SpatialIndex lastTree = null;
+                int totalRuns = warmup + runs;
+                int pSize = points.size();
+
+                for (int r = 0; r < totalRuns; r++) {
+                    boolean isWarmup = (r < warmup);
+                    System.gc();
+                    GpsComparator.counting = false;
+                    SpatialIndex tree = entry.getFactory().create(minX, minY, maxX, maxY);
+                    if (r == 0) {
+                        br.name = tree.name();
+                    }
+
+                    long t0 = System.nanoTime();
+                    for (int p = 0; p < pSize; p++) {
+                        tree.insert(points.get(p));
+                    }
+                    long insDur = System.nanoTime() - t0;
+
+                    long timeSmall = 0;
+                    long timeMedium = 0;
+                    long timeLarge = 0;
+                    for (int i = 0; i < areaCount; i++) {
+                        long f0 = System.nanoTime();
+                        List<GpsPoint> res = tree.find(lowers[i], uppers[i]);
+                        long fDur = System.nanoTime() - f0;
+                        blackholeSink += res.size();
+                        int c = cat[i];
+                        if (c == 0)
+                            timeSmall += fDur;
+                        else if (c == 1)
+                            timeMedium += fDur;
+                        else
+                            timeLarge += fDur;
+                    }
+
+                    if (!isWarmup) {
+                        int mIdx = r - warmup;
+                        insertTimes[mIdx] = insDur;
+                        smallTimes[mIdx] = timeSmall;
+                        mediumTimes[mIdx] = timeMedium;
+                        largeTimes[mIdx] = timeLarge;
+                    }
+                    lastTree = tree;
+                }
+
+                br.insertMs = median(insertTimes);
+                br.smallMs = median(smallTimes);
+                br.mediumMs = median(mediumTimes);
+                br.largeMs = median(largeTimes);
+                br.findMs = br.smallMs + br.mediumMs + br.largeMs;
+                br.usPerArea = (br.findMs * 1000.0) / areaCount;
+
+                System.out.printf(Locale.ROOT,
+                        "  vkladanie: %.1f ms, vyhladavanie: %.1f ms (male: %.1f ms, stredne: %.1f ms, velke: %.1f ms)%n",
+                        br.insertMs, br.findMs, br.smallMs, br.mediumMs, br.largeMs);
+
+                // d) overenie MIMO merania
+                System.out.print("  Overujem strukturu...");
+                GpsComparator.counting = true;
+                br.counts = new int[areaCount];
+                br.idSums = new long[areaCount];
+                long totalComparisons = 0;
+                boolean canCount = (lastTree.comparisons() >= 0);
+
+                for (int i = 0; i < areaCount; i++) {
+                    GpsComparator.calls = 0;
+                    List<GpsPoint> res = lastTree.find(lowers[i], uppers[i]);
+                    br.counts[i] = res.size();
+                    long idSum = 0;
+                    for (int k = 0; k < res.size(); k++) {
+                        idSum += res.get(k).getId();
+                    }
+                    br.idSums[i] = idSum;
+                    if (canCount) {
+                        long c = lastTree.comparisons();
+                        if (c >= 0) {
+                            totalComparisons += c;
+                        }
+                    }
+                }
+                GpsComparator.counting = false;
+                br.avgComparisons = canCount ? ((double) totalComparisons / areaCount) : -1.0;
+                System.out.println(" hotovo.");
+
+            } catch (Throwable t) {
+                br.failed = true;
+                br.error = t.getClass().getSimpleName() + (t.getMessage() != null ? (": " + t.getMessage()) : "");
+                System.out.println("  [FAIL] " + entry.getKey() + ": " + br.error);
+            }
+            results.add(br);
+        }
+
+        // porovnanie
+        BenchmarkResult firstSuccess = null;
+        for (BenchmarkResult br : results) {
+            if (br.failed)
+                continue;
+
+            if (verifyCount > 0) {
+                int refDiff = 0;
+                for (int v = 0; v < verifyCount; v++) {
+                    int aIdx = refAreaIndices[v];
+                    if (br.counts[aIdx] != refCounts[v] || br.idSums[aIdx] != refIdSums[v]) {
+                        refDiff++;
+                    }
+                }
+                br.refErrors = refDiff;
+            } else {
+                br.refErrors = 0;
+            }
+
+            if (firstSuccess == null) {
+                firstSuccess = br;
+                br.firstStructErrors = 0;
+            } else {
+                int diffFirst = 0;
+                for (int i = 0; i < areaCount; i++) {
+                    if (br.counts[i] != firstSuccess.counts[i] || br.idSums[i] != firstSuccess.idSums[i]) {
+                        diffFirst++;
+                    }
+                }
+                br.firstStructErrors = diffFirst;
+            }
+        }
+
+        // tabulka
+        System.out.println();
+        System.out.println("=== Vysledky benchmarku (" + (order.equals("shuffled") ? "shuffled" : "file") + ", runs="
+                + runs + ", warmup=" + warmup + ") ===");
+        String header = String.format(Locale.ROOT, "%-22s | %14s | %17s | %11s | %27s | %16s | %10s | %11s",
+                "Nazov", "Vkladanie [ms]", "Vyhladavanie [ms]", "us / oblast", "Male / Stredne / Velke [ms]",
+                "Porovnani/oblast", "Chyb ref", "Chyb 1. str");
+        System.out.println(header);
+        System.out.println("-".repeat(header.length()));
+        for (BenchmarkResult br : results) {
+            if (br.failed) {
+                System.out.printf(Locale.ROOT, "%-22s | FAIL: %s%n", br.name, br.error);
+            } else {
+                String tripple = String.format(Locale.ROOT, "%.1f / %.1f / %.1f", br.smallMs, br.mediumMs, br.largeMs);
+                String compStr = br.avgComparisons >= 0 ? String.format(Locale.ROOT, "%.1f", br.avgComparisons) : "-";
+                String firstErrStr = (br == firstSuccess) ? "0" : String.valueOf(br.firstStructErrors);
+
+                System.out.printf(Locale.ROOT, "%-22s | %14.1f | %17.1f | %11.2f | %27s | %16s | %10d | %11s%n",
+                        br.name, br.insertMs, br.findMs, br.usPerArea, tripple, compStr, br.refErrors, firstErrStr);
+            }
+        }
+        System.out.println("-".repeat(header.length()));
     }
 
     public static void main(String[] args) {
@@ -463,13 +784,19 @@ public class TreeTester {
                     case "--maxDepth" -> maxDepth = Integer.parseInt(args[++i]);
                     case "--verifyEvery" -> verifyEveryOption = Integer.parseInt(args[++i]);
                     case "--seed" -> seed = Long.parseLong(args[++i]);
+                    case "--data" -> dataMode = true;
+                    case "--order" -> order = args[++i].toLowerCase(Locale.ROOT);
+                    case "--runs" -> runs = Integer.parseInt(args[++i]);
+                    case "--warmup" -> warmup = Integer.parseInt(args[++i]);
+                    case "--verifyAreas" -> verifyAreas = Integer.parseInt(args[++i]);
                     default -> throw new IllegalArgumentException("neznama moznost " + args[i]);
                 }
             }
             if (ops < 1 || rangeOption < 10 || maxDepth < 0 || pDup < 0 || pDup > 1 || pInsertOption > 1
                     || verifyEveryOption < 1
-                    || !(structure.equals("kd") || structure.equals("quad") || structure.equals("quadkd")
-                            || structure.equals("all"))) {
+                    || runs < 1 || warmup < 0 || verifyAreas < 0
+                    || !(order.equals("file") || order.equals("shuffled"))
+                    || !(structure.equals("all") || findEntry(structure) != null)) {
                 throw new IllegalArgumentException("neplatne hodnoty argumentov");
             }
         } catch (RuntimeException e) {
@@ -478,20 +805,21 @@ public class TreeTester {
             return;
         }
 
+        if (dataMode) {
+            runDataBenchmark();
+            return;
+        }
+
         long start = System.nanoTime();
         System.out.println("TreeTester: structure=" + structure + ", ops=" + ops + ", range=" + rangeOption
                 + ", seed=" + seed);
-        if (structure.equals("kd") || structure.equals("all")) {
-            current = "kd";
-            testStructure("K-D strom");
-        }
-        if (structure.equals("quad") || structure.equals("all")) {
-            current = "quad";
-            testStructure("Quad strom (maxDepth = " + maxDepth + ")");
-        }
-        if (structure.equals("quadkd") || structure.equals("all")) {
-            current = "quadkd";
-            testStructure("Quad strom s K-D stromom vo vrcholoch (maxDepth = " + maxDepth + ")");
+        for (IndexEntry entry : FACTORIES) {
+            String key = entry.getKey();
+            if (structure.equals("all") || structure.equals(key)) {
+                current = key;
+                index = entry.getFactory().create(0, 0, rangeOption, rangeOption);
+                testStructure(index.name());
+            }
         }
         System.out.printf(Locale.ROOT, "%nVysledok: %d uspesnych, %d neuspesnych (%.1f s)%n", passed, failed,
                 (System.nanoTime() - start) / 1e9);
