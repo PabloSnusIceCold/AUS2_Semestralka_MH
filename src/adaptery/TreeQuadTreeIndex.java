@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda TreeQuadTreeIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import tree.QuadTree;
 import java.util.ArrayList;

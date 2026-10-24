@@ -1,23 +1,23 @@
 package stromy;
 
-// Trieda KDTree.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda KDTree.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * UniverzĂˇlny K-D strom (bez rekurzie) s operĂˇciami Insert a Find.
- * Ĺ tĂ˝lom zodpovedĂˇ BsTree&lt;T&gt;: uzly (KDNode&lt;T&gt;) obsahujĂş iba dĂˇta
+ * Univerzálny K-D strom (bez rekurzie) s operáciami Insert a Find.
+ * Štýlom zodpovedá BsTree&lt;T&gt;: uzly (KDNode&lt;T&gt;) obsahujú iba dáta
  * typu T,
- * porovnĂˇvanie zabezpeÄŤuje {@link KDComparator}.
+ * porovnávanie zabezpečuje {@link KDComparator}.
  *
- * Konvencia: v uzle s hÄşbkou h sa porovnĂˇva dimenzia (h mod k).
- * - ÄľavĂ˝ podstrom: dĂˇta s hodnotou v dimenzii menĹˇou alebo rovnou ako uzol
- * - pravĂ˝ podstrom: dĂˇta s hodnotou v dimenzii vĂ¤ÄŤĹˇou ako uzol
- * PamĂ¤ĹĄovĂˇ nĂˇroÄŤnosĹĄ stromu: O(n) â€“ uzol drĹľĂ­ dĂˇta a 2 referencie;
- * rodiÄŤ ani hÄşbka sa neukladajĂş.
+ * Konvencia: v uzle s hĺbkou h sa porovnáva dimenzia (h mod k).
+ * - ľavý podstrom: dáta s hodnotou v dimenzii menšou alebo rovnou ako uzol
+ * - pravý podstrom: dáta s hodnotou v dimenzii väčšou ako uzol
+ * Pamäťová náročnosť stromu: O(n) – uzol drží dáta a 2 referencie;
+ * rodič ani hĺbka sa neukladajú.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 public class KDTree<T> {
     private final int dimensions;
@@ -26,8 +26,8 @@ public class KDTree<T> {
     private int size;
 
     /**
-     * @param dimensions poÄŤet dimenziĂ­ (k >= 1)
-     * @param comparator funkcia porovnĂˇvajĂşca dĂˇta v zadanej dimenzii
+     * @param dimensions počet dimenzií (k >= 1)
+     * @param comparator funkcia porovnávajúca dáta v zadanej dimenzii
      */
     public KDTree(int dimensions, KDComparator<T> comparator) {
         if (dimensions < 1) {
@@ -49,12 +49,12 @@ public class KDTree<T> {
     }
 
     /**
-     * VloĹľĂ­ bod do stromu.
+     * Vloží bod do stromu.
      *
-     * ÄŚasovĂˇ zloĹľitosĹĄ: O(h), kde h je vĂ˝Ĺˇka stromu.
-     * - priemerne (nĂˇhodnĂ© poradie vkladania): O(log n)
-     * - najhorĹˇĂ­ prĂ­pad (utriedenĂ˝ vstup, nevyvĂˇĹľenĂ˝ strom): O(n)
-     * PamĂ¤ĹĄovĂˇ zloĹľitosĹĄ: O(1) pomocnĂˇ pamĂ¤ĹĄ (iteratĂ­vny prechod, jeden novĂ˝ uzol).
+     * Časová zložitosť: O(h), kde h je výška stromu.
+     * - priemerne (náhodné poradie vkladania): O(log n)
+     * - najhorší prípad (utriedený vstup, nevyvážený strom): O(n)
+     * Pamäťová zložitosť: O(1) pomocná pamäť (iteratívny prechod, jeden nový uzol).
      */
     public void insert(T data) {
         if (data == null) {
@@ -91,27 +91,27 @@ public class KDTree<T> {
     }
 
     /**
-     * NĂˇjde vĹˇetky zĂˇznamy leĹľiace celĂ© v zadanej oblasti, t. j. pre kaĹľdĂş
-     * dimenziu d platĂ­: lower[d] <= data[d] <= upper[d] (hranice vrĂˇtane).
+     * Nájde všetky záznamy ležiace celé v zadanej oblasti, t. j. pre každú
+     * dimenziu d platí: lower[d] <= data[d] <= upper[d] (hranice vrátane).
      *
-     * ÄŚasovĂˇ zloĹľitosĹĄ zĂˇvisĂ­ od tvaru stromu a zadanej oblasti.
-     * Pri vyvĂˇĹľenom strome mĂ´Ĺľe byĹĄ vyhÄľadĂˇvanie v niektorĂ˝ch prĂ­padoch
-     * horĹˇie ako O(log n), najhorĹˇĂ­ prĂ­pad zĂˇvisĂ­ od tvaru stromu.
+     * Časová zložitosť závisí od tvaru stromu a zadanej oblasti.
+     * Pri vyváženom strome môže byť vyhľadávanie v niektorých prípadoch
+     * horšie ako O(log n), najhorší prípad závisí od tvaru stromu.
      *
-     * PamĂ¤ĹĄovĂˇ zloĹľitosĹĄ: O(h) pre zĂˇsobnĂ­k uzlov + O(m) pre vĂ˝sledok,
-     * kde h je vĂ˝Ĺˇka stromu a m je poÄŤet nĂˇjdenĂ˝ch zĂˇznamov.
+     * Pamäťová zložitosť: O(h) pre zásobník uzlov + O(m) pre výsledok,
+     * kde h je výška stromu a m je počet nájdených záznamov.
      *
-     * @param lower dolnĂˇ hranica oblasti
-     * @param upper hornĂˇ hranica oblasti
-     * @return zoznam nĂˇjdenĂ˝ch dĂˇt
+     * @param lower dolná hranica oblasti
+     * @param upper horná hranica oblasti
+     * @return zoznam nájdených dát
      */
     public List<T> find(T lower, T upper) {
         List<T> result = new LinkedList<>();
         if (root == null) {
             return result;
         }
-        // ExplicitnĂ˝ zĂˇsobnĂ­k uzlov a im zodpovedajĂşcich dimenziĂ­ (LinkedList,
-        // push/pop v O(1), bez nutnosti zvĂ¤ÄŤĹˇovania poÄľa).
+        // Explicitný zásobník uzlov a im zodpovedajúcich dimenzií (LinkedList,
+        // push/pop v O(1), bez nutnosti zväčšovania poľa).
         LinkedList<KDNode<T>> nodeStack = new LinkedList<>();
         LinkedList<Integer> dimensionStack = new LinkedList<>();
         nodeStack.push(root);
@@ -130,12 +130,12 @@ public class KDTree<T> {
             // ak je aktualna dimenzia 0 a celkova je 2 tak potom, 0(X) +1 % 2 = 1,
             // dalsia dimenzia ktoru budeme prehladavat bude 1(Y)
             int nextDimension = (dimension + 1) % dimensions;
-            // Ä˝avĂ˝ podstrom obsahuje hodnoty <= uzol v dimenzii:
-            // ide sa doĹ iba ak lower <= uzol.
+            // Ľavý podstrom obsahuje hodnoty <= uzol v dimenzii:
+            // ide sa doň iba ak lower <= uzol.
             boolean goLeft = node.getLeft() != null
                     && comparator.compare(lower, node.getData(), dimension) <= 0;
-            // PravĂ˝ podstrom obsahuje hodnoty > uzol:
-            // ide sa doĹ iba ak upper > uzol.
+            // Pravý podstrom obsahuje hodnoty > uzol:
+            // ide sa doň iba ak upper > uzol.
             boolean goRight = node.getRight() != null
                     && comparator.compare(upper, node.getData(), dimension) > 0;
 
@@ -153,9 +153,9 @@ public class KDTree<T> {
         return result;
     }
 
-    /** O(k) â€“ kontrola, ÄŤi dĂˇta leĹľia v oblasti vo vĹˇetkĂ˝ch dimenziĂˇch. */
+    /** O(k) – kontrola, či dáta ležia v oblasti vo všetkých dimenziách. */
     private boolean isInRegion(T data, T lower, T upper) {
-        // prejdi vĹˇetky dimenzie
+        // prejdi všetky dimenzie
         for (int d = 0; d < dimensions; d++) {
             // porovnaj data so spodnou hranicou
             if (comparator.compare(data, lower, d) < 0
@@ -167,4 +167,3 @@ public class KDTree<T> {
         return true;
     }
 }
-

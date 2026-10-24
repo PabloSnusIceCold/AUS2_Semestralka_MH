@@ -1,7 +1,9 @@
 package model;
 
+// Trieda Area.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 /**
- * ObdlznikovĂˇ oblast zadana v GPS suradniciach.
+ * Obdĺžniková oblasť zadaná v GPS súradniciach.
  * minX = min_lon, minY = min_lat, maxX = max_lon, maxY = max_lat.
  */
 public class Area {

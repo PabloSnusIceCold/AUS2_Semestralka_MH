@@ -1,15 +1,15 @@
 package model;
 
-// Trieda Point2D.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda Point2D.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 /**
- * JednoduchĂ˝ 2D bod pouĹľĂ­vanĂ˝ testerom. Identita objektu je dĂ´leĹľitĂˇ: tester
- * porovnĂˇva vĂ˝sledky Find s referenÄŤnĂ˝mi vĂ˝sledkami po konkrĂ©tnych objektoch
- * (==), nie iba podÄľa sĂşradnĂ­c alebo poÄŤtu. Preto trieda zĂˇmerne neprepisuje
+ * Jednoduchý 2D bod používaný testerom. Identita objektu je dôležitá: tester
+ * porovnáva výsledky Find s referenčnými výsledkami po konkrétnych objektoch
+ * (==), nie iba podľa súradníc alebo počtu. Preto trieda zámerne neprepisuje
  * equals/hashCode.
  *
- * Pole id je poradovĂ© ÄŤĂ­slo vloĹľenĂ©ho zĂˇznamu v referenÄŤnom zozname.
- * HraniÄŤnĂ© body intervalov pouĹľĂ­vajĂş id = -1.
+ * Pole id je poradové číslo vloženého záznamu v referenčnom zozname.
+ * Hraničné body intervalov používajú id = -1.
  */
 public final class Point2D {
     public final int x;

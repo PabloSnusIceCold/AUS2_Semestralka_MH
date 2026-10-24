@@ -1,26 +1,28 @@
 package stromy;
 
+// Trieda QuadKDNode.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import java.util.List;
 
 /**
- * Uzol Quad stromu, ktorĂ˝ zĂˇznamy uchovĂˇva v K-d strome (nie v zozname).
- * Reprezentuje obdÄşĹľnikovĂş oblasĹĄ, ktorej Ĺˇtyria synovia predstavujĂş kvadranty:
- * 0. severozĂˇpad, 1. severovĂ˝chod, 2. juhovĂ˝chod, 3. juhozĂˇpad.
- * (Sever = vĂ¤ÄŤĹˇie hodnoty v dimenzii 1, vĂ˝chod = vĂ¤ÄŤĹˇie hodnoty v dimenzii 0.)
+ * Uzol Quad stromu, ktorý záznamy uchováva v K-d strome (nie v zozname).
+ * Reprezentuje obdĺžnikovú oblasť, ktorej štyria synovia predstavujú kvadranty:
+ * 0. severozápad, 1. severovýchod, 2. juhovýchod, 3. juhozápad.
+ * (Sever = väčšie hodnoty v dimenzii 1, východ = väčšie hodnoty v dimenzii 0.)
  *
  * Uzol obsahuje:
- * - POLE so 4 referenciami na potomkov (null = prĂˇzdna oblasĹĄ, alebo list),
- * - sĂşradnice oblasti (dolnĂˇ a hornĂˇ hranica),
- * - K-d strom so zĂˇznamami nachĂˇdzajĂşcimi sa v oblasti.
+ * - POLE so 4 referenciami na potomkov (null = prázdna oblasť, alebo list),
+ * - súradnice oblasti (dolná a horná hranica),
+ * - K-d strom so záznamami nachádzajúcimi sa v oblasti.
  *
- * K-d strom sa vytvĂˇra aĹľ pri vloĹľenĂ­ prvĂ©ho zĂˇznamu a po rozdelenĂ­ oblasti
- * sa zruĹˇĂ­, takĹľe vnĂştornĂ© uzly a prĂˇzdne oblasti ho nedrĹľia.
- * Uzol si pamĂ¤tĂˇ aj prvĂ˝ vloĹľenĂ˝ zĂˇznam (firstRecord) na rĂ˝chle porovnanie
- * kÄľĂşÄŤa pri vkladanĂ­ (O(1) bez prehÄľadĂˇvania K-d stromu).
+ * K-d strom sa vytvára až pri vložení prvého záznamu a po rozdelení oblasti
+ * sa zruší, takže vnútorné uzly a prázdne oblasti ho nedržia.
+ * Uzol si pamätá aj prvý vložený záznam (firstRecord) na rýchle porovnanie
+ * kľúča pri vkladaní (O(1) bez prehľadávania K-d stromu).
  *
- * PamĂ¤ĹĄovĂˇ nĂˇroÄŤnosĹĄ: O(1) na uzol + O(r) na r zĂˇznamov v K-d strome.
+ * Pamäťová náročnosť: O(1) na uzol + O(r) na r záznamov v K-d strome.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v uzle
+ * @param <T> typ dát uložených v uzle
  */
 class QuadKDNode<T> {
     static final int NORTH_WEST = 0;
@@ -40,9 +42,9 @@ class QuadKDNode<T> {
     private QuadKDNode<T>[] children;
 
     /**
-     * @param lowerBound dolnĂˇ hranica oblasti (minimĂˇ v oboch dimenziĂˇch)
-     * @param upperBound hornĂˇ hranica oblasti (maximĂˇ v oboch dimenziĂˇch)
-     * @param comparator funkcia porovnĂˇvajĂşca dĂˇta v K-d strome uzla
+     * @param lowerBound dolná hranica oblasti (minimá v oboch dimenziách)
+     * @param upperBound horná hranica oblasti (maximá v oboch dimenziách)
+     * @param comparator funkcia porovnávajúca dáta v K-d strome uzla
      */
     QuadKDNode(T lowerBound, T upperBound, KDComparator<T> comparator) {
         this.lowerBound = lowerBound;
@@ -58,19 +60,19 @@ class QuadKDNode<T> {
         return upperBound;
     }
 
-    /** Uzol neobsahuje Ĺľiadny zĂˇznam. */
+    /** Uzol neobsahuje žiadny záznam. */
     boolean hasNoRecords() {
         return records == null;
     }
 
-    /** PrvĂ˝ zĂˇznam vloĹľenĂ˝ do uzla (null, ak uzol nemĂˇ zĂˇznamy). */
+    /** Prvý záznam vložený do uzla (null, ak uzol nemá záznamy). */
     T getFirstRecord() {
         return firstRecord;
     }
 
     /**
-     * PridĂˇ zĂˇznam do K-d stromu uzla.
-     * ÄŚasovĂˇ zloĹľitosĹĄ: O(h) vloĹľenia do K-d stromu, kde h je jeho vĂ˝Ĺˇka.
+     * Pridá záznam do K-d stromu uzla.
+     * Časová zložitosť: O(h) vloženia do K-d stromu, kde h je jeho výška.
      */
     void addRecord(T data) {
         if (records == null) {
@@ -81,18 +83,18 @@ class QuadKDNode<T> {
     }
 
     /**
-     * NĂˇjde zĂˇznamy uzla leĹľiace v zadanej oblasti pomocou intervalovĂ©ho
-     * vyhÄľadĂˇvania v K-d strome uzla (bez prehÄľadania vĹˇetkĂ˝ch zĂˇznamov).
+     * Nájde záznamy uzla ležiace v zadanej oblasti pomocou intervalového
+     * vyhľadávania v K-d strome uzla (bez prehľadania všetkých záznamov).
      */
     List<T> findRecords(T lower, T upper) {
         return records.find(lower, upper);
     }
 
     /**
-     * Presunie vĹˇetky zĂˇznamy uzla do inĂ©ho uzla a vyprĂˇzdni tento uzol.
-     * Predpoklad: vĹˇetky zĂˇznamy uzla majĂş rovnakĂ˝ kÄľĂşÄŤ (su to duplicity) ako
-     * firstRecord (tak je to vĹľdy pri uzle, ktorĂ˝ sa eĹˇte mĂ´Ĺľe deliĹĄ), preto ich
-     * K-d strom nĂˇjde jednĂ˝m intervalovĂ˝m vyhÄľadĂˇvanĂ­m na tomto kÄľĂşÄŤi.
+     * Presunie všetky záznamy uzla do iného uzla a vyprázdni tento uzol.
+     * Predpoklad: všetky záznamy uzla majú rovnaký kľúč (su to duplicity) ako
+     * firstRecord (tak je to vždy pri uzle, ktorý sa ešte môže deliť), preto ich
+     * K-d strom nájde jedným intervalovým vyhľadávaním na tomto kľúči.
      */
     void moveRecordsTo(QuadKDNode<T> target) {
         for (T record : records.find(firstRecord, firstRecord)) {
@@ -102,12 +104,12 @@ class QuadKDNode<T> {
         firstRecord = null;
     }
 
-    /** List nemĂˇ vytvorenĂ© pole potomkov. */
+    /** List nemá vytvorené pole potomkov. */
     boolean isLeaf() {
         return children == null;
     }
 
-    /** VytvorĂ­ pole so 4 referenciami na potomkov (vĹˇetky prĂˇzdne = null). */
+    /** Vytvorí pole so 4 referenciami na potomkov (všetky prázdne = null). */
     @SuppressWarnings("unchecked")
     void createChildren() {
         children = (QuadKDNode<T>[]) new QuadKDNode[CHILD_COUNT];
@@ -122,4 +124,3 @@ class QuadKDNode<T> {
         children[quadrant] = child;
     }
 }
-

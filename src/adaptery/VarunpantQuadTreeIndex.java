@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda VarunpantQuadTreeIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import com.github.varunpant.quadtree.Point;
 import com.github.varunpant.quadtree.QuadTree;

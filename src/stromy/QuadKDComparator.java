@@ -1,19 +1,19 @@
 package stromy;
 
+// Trieda QuadKDComparator.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 /**
- * Komparator pre Quad strom s K-d stromom vo vrcholoch. SpĂˇja dve funkcie:
+ * Komparátor pre Quad strom s K-d stromom vo vrcholoch. Spája dve funkcie:
  * - {@link QuadComparator}: porovnanie a delenie oblasti na polovicu
  * (pre Quad strom),
  * - {@link KDComparator}: porovnanie v zadanej dimenzii (pre K-d strom
- * v kaĹľdom vrchole).
+ * v každom vrchole).
  *
- * Obe rozhrania majĂş rovnakĂş metĂłdu compare(a, b, dimension), takĹľe staÄŤĂ­
- * implementovaĹĄ jednu funkciu porovnania pre oba stromy. Dimenzie sĂş 0 (napr.
- * X)
- * a 1 (napr. Y).
+ * Obe rozhrania majú rovnakú metódu compare(a, b, dimension), takže stačí
+ * implementovať jednu funkciu porovnania pre oba stromy. Dimenzie sú 0 (napr.
+ * X) a 1 (napr. Y).
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 public interface QuadKDComparator<T> extends QuadComparator<T>, KDComparator<T> {
 }
-

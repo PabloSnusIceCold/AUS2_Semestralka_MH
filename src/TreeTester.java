@@ -33,7 +33,7 @@ public class TreeTester {
 
     // rezim --data pre realne data
     static boolean dataMode = true;
-    static String order = "shuffled"; // "file" alebo "shuffled"
+    static String order = "file"; // "file" alebo "shuffled"
     static int runs = 1;
     static int warmup = 0;
     static int verifyAreas = 1000;

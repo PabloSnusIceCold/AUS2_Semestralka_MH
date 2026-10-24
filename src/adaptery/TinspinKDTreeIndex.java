@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda TinspinKDTreeIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import org.tinspin.index.kdtree.KDTree;
 import org.tinspin.index.kdtree.KDIterator;

@@ -1,5 +1,7 @@
 package model;
 
+// Trieda GpsPoint.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 /**
  * GPS bod. Pozor na poradie: x = lon (zemepisna dlzka), y = lat (zemepisna sirka).
  */

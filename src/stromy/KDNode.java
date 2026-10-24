@@ -1,14 +1,14 @@
 package stromy;
 
-// Trieda KDNode.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda KDNode.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 /**
- * Uzol K-D stromu (analĂłgia BstNode&lt;T&gt;). Obsahuje iba dĂˇta typu T
- * a referencie na ÄľavĂ©ho a pravĂ©ho syna.
+ * Uzol K-D stromu (analógia BstNode&lt;T&gt;). Obsahuje iba dáta typu T
+ * a referencie na ľavého a pravého syna.
  *
- * PamĂ¤ĹĄovĂˇ nĂˇroÄŤnosĹĄ: O(1) na uzol.
+ * Pamäťová náročnosť: O(1) na uzol.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v uzle
+ * @param <T> typ dát uložených v uzle
  */
 class KDNode<T> {
     private final T data;

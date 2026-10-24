@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda OwnKDTreeIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import model.GpsComparator;
 import stromy.KDTree;

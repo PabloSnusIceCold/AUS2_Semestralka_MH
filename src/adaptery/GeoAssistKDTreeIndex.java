@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda GeoAssistKDTreeIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import com.thegeekyasian.geoassist.kdtree.KDTree;
 import com.thegeekyasian.geoassist.kdtree.KDTreeObject;

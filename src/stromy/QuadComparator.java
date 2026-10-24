@@ -1,39 +1,38 @@
 package stromy;
 
-// Trieda QuadComparator.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda QuadComparator.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 /**
- * Funkcia (rozhranie) zabezpeÄŤujĂşca univerzĂˇlnosĹĄ kÄľĂşÄŤa pre Quad strom.
- * Strom nepoznĂˇ vnĂştornĂş ĹˇtruktĂşru dĂˇt typu T. VyĹľaduje od nej iba tri
- * operĂˇcie:
+ * Funkcia (rozhranie) zabezpečujúca univerzálnosť kľúča pre Quad strom.
+ * Strom nepozná vnútornú štruktúru dát typu T. Vyžaduje od nej iba tri
+ * operácie:
  * porovnanie, rozdelenie oblasti na polovicu a skombinovanie dvoch objektov.
  *
- * Quad strom je dvojrozmernĂ˝, preto sa pouĹľĂ­vajĂş iba dimenzie
+ * Quad strom je dvojrozmerný, preto sa používajú iba dimenzie
  * 0 (napr. X) a 1 (napr. Y).
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 public interface QuadComparator<T> {
     /**
-     * PorovnĂˇ dva objekty v zadanej dimenzii (0 alebo 1).
+     * Porovná dva objekty v zadanej dimenzii (0 alebo 1).
      *
-     * @return zĂˇpornĂş hodnotu, nulu alebo kladnĂş hodnotu ak je a menĹˇĂ­,
-     *         rovnĂ˝ alebo vĂ¤ÄŤĹˇĂ­ ako b v dimenzii dimension
+     * @return zápornú hodnotu, nulu alebo kladnú hodnotu ak je a menší,
+     *         rovný alebo väčší ako b v dimenzii dimension
      */
     int compare(T a, T b, int dimension);
 
     /**
-     * Rozdelenie oblasti na polovicu: vrĂˇti objekt typu T, ktorĂ©ho hodnota
-     * v kaĹľdej dimenzii leĹľĂ­ v strede medzi hodnotami lower a upper
+     * Rozdelenie oblasti na polovicu: vráti objekt typu T, ktorého hodnota
+     * v každej dimenzii leží v strede medzi hodnotami lower a upper
      * (lower + (upper - lower) / 2).
      */
     T middle(T lower, T upper);
 
     /**
-     * VytvorĂ­ objekt typu T, ktorĂ©ho hodnota v dimenzii 0 je prevzatĂˇ z objektu
-     * xSource a v dimenzii 1 z objektu ySource. PouĹľĂ­va sa na zostavenie rohov
-     * oblastĂ­ kvadrantov pri delenĂ­ oblasti.
+     * Vytvorí objekt typu T, ktorého hodnota v dimenzii 0 je prevzatá z objektu
+     * xSource a v dimenzii 1 z objektu ySource. Používa sa na zostavenie rohov
+     * oblastí kvadrantov pri delení oblasti.
      */
     T combine(T xSource, T ySource);
 }
-

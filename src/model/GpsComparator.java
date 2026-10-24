@@ -1,5 +1,7 @@
 package model;
 
+// Trieda GpsComparator.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import stromy.QuadKDComparator;
 /**
  * Komparator pre GpsPoint (x = lon, y = lat), pouzitelny v K-d strome,

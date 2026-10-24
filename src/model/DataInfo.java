@@ -1,5 +1,7 @@
 package model;
 
+// Trieda DataInfo.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import java.util.List;
 
 /**

@@ -1,22 +1,24 @@
 package stromy;
 
+// Trieda QuadKDTree.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * UniverzĂˇlny Quad strom (bez rekurzie) s operĂˇciami Insert a Find, ktorĂ˝
- * zĂˇznamy vo vrcholoch uchovĂˇva v K-d strome (nie v zozname).
- * Ĺ tĂ˝lom zodpovedĂˇ QuadTree&lt;T&gt;: porovnĂˇvanie a delenie kÄľĂşÄŤov
- * zabezpeÄŤuje {@link QuadKDComparator}.
+ * Univerzálny Quad strom (bez rekurzie) s operáciami Insert a Find, ktorý
+ * záznamy vo vrcholoch uchováva v K-d strome (nie v zozname).
+ * Štýlom zodpovedá QuadTree&lt;T&gt;: porovnávanie a delenie kľúčov
+ * zabezpečuje {@link QuadKDComparator}.
  *
- * KoreĹ reprezentuje celĂş oblasĹĄ zadanĂş na zaÄŤiatku (rozsah kÄľĂşÄŤov).
- * Ak oblasĹĄ obsahuje viac ako 1 zĂˇznam, delĂ­ sa na 4 kvadranty, aĹľ kĂ˝m
- * nie je v kaĹľdej oblasti najviac 1 zĂˇznam, alebo kĂ˝m nie je dosiahnutĂˇ
- * maximĂˇlna povolenĂˇ vĂ˝Ĺˇka stromu (maxDepth). KoreĹ mĂˇ hÄşbku 0.
- * Uzol, ktorĂ˝ sa uĹľ nesmie deliĹĄ, drĹľĂ­ viac zĂˇznamov, a tie sĂş v K-d strome,
- * takĹľe sa v nich dĂˇ efektĂ­vne vyhÄľadĂˇvaĹĄ aj intervalovo.
+ * Koreň reprezentuje celú oblasť zadanú na začiatku (rozsah kľúčov).
+ * Ak oblasť obsahuje viac ako 1 záznam, delí sa na 4 kvadranty, až kým
+ * nie je v každej oblasti najviac 1 záznam, alebo kým nie je dosiahnutá
+ * maximálna povolená výška stromu (maxDepth). Koreň má hĺbku 0.
+ * Uzol, ktorý sa už nesmie deliť, drží viac záznamov, a tie sú v K-d strome,
+ * takže sa v nich dá efektívne vyhľadávať aj intervalovo.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 public class QuadKDTree<T> {
     private static final int DIMENSIONS = 2;
@@ -27,13 +29,13 @@ public class QuadKDTree<T> {
     private final QuadKDNode<T> root;
 
     /**
-     * @param comparator funkcia porovnĂˇvajĂşca kÄľĂşÄŤe (pre Quad strom aj K-d strom),
-     *                   poÄŤĂ­tajĂşca ich rozdiel a delenie na polovicu
-     * @param lowerBound dolnĂˇ hranica rozsahu kÄľĂşÄŤov (minimĂˇ v oboch dimenziĂˇch)
-     * @param upperBound hornĂˇ hranica rozsahu kÄľĂşÄŤov (maximĂˇ v oboch dimenziĂˇch)
-     * @param maxDepth   maximĂˇlna povolenĂˇ vĂ˝Ĺˇka stromu (hÄşbka uzla, ktorĂ˝ sa eĹˇte
-     *                   smie deliĹĄ, je menĹˇia ako maxDepth); po jej dosiahnutĂ­ sa
-     *                   oblasĹĄ uĹľ nedelĂ­ a zĂˇznam sa pridĂˇ do K-d stromu vo vrchole
+     * @param comparator funkcia porovnávajúca kľúče (pre Quad strom aj K-d strom),
+     *                   počítajúca ich rozdiel a delenie na polovicu
+     * @param lowerBound dolná hranica rozsahu kľúčov (minimá v oboch dimenziách)
+     * @param upperBound horná hranica rozsahu kľúčov (maximá v oboch dimenziách)
+     * @param maxDepth   maximálna povolená výška stromu (hĺbka uzla, ktorý sa ešte
+     *                   smie deliť, je menšia ako maxDepth); po jej dosiahnutí sa
+     *                   oblasť už nedelí a záznam sa pridá do K-d stromu vo vrchole
      */
     public QuadKDTree(QuadKDComparator<T> comparator, T lowerBound, T upperBound, int maxDepth) {
         if (maxDepth < 0) {
@@ -53,25 +55,25 @@ public class QuadKDTree<T> {
     }
 
     /**
-     * VloĹľĂ­ bod do stromu.
+     * Vloží bod do stromu.
      *
-     * Postup: od koreĹa sa hÄľadĂˇ existujĂşca oblasĹĄ, do ktorej bod patrĂ­.
-     * - Ak je oblasĹĄ (referencia v poli) prĂˇzdna, vytvorĂ­ sa list so zĂˇznamom
-     * a nastavĂ­ sa naĹ smernĂ­k na prĂ­sluĹˇnom indexe poÄľa.
-     * - Ak je oblasĹĄ plnĂˇ (list uĹľ obsahuje zĂˇznam s inĂ˝m kÄľĂşÄŤom), rozdelĂ­ sa na
-     * 4 kvadranty, existujĂşce zĂˇznamy sa presunĂş do prĂ­sluĹˇnĂ©ho kvadrantu
-     * a pokus o vloĹľenie sa zopakuje.
-     * - Ak sa narazĂ­ na zĂˇznam s rovnakĂ˝m kÄľĂşÄŤom (alebo je dosiahnutĂˇ maxDepth),
-     * bod sa pridĂˇ do K-d stromu priamo v danom vrchole.
+     * Postup: od koreňa sa hľadá existujúca oblasť, do ktorej bod patrí.
+     * - Ak je oblasť (referencia v poli) prázdna, vytvorí sa list so záznamom
+     * a nastaví sa naň smerník na príslušnom indexe poľa.
+     * - Ak je oblasť plná (list už obsahuje záznam s iným kľúčom), rozdelí sa na
+     * 4 kvadranty, existujúce záznamy sa presunú do príslušného kvadrantu
+     * a pokus o vloženie sa zopakuje.
+     * - Ak sa narazí na záznam s rovnakým kľúčom (alebo je dosiahnutá maxDepth),
+     * bod sa pridá do K-d stromu priamo v danom vrchole.
      *
-     * ÄŚasovĂˇ zloĹľitosĹĄ: O(maxDepth + hk), kde hk je vĂ˝Ĺˇka K-d stromu vo vrchole,
-     * do ktorĂ©ho sa vkladĂˇ (pri rovnakĂ˝ch kÄľĂşÄŤoch sa K-d strom degeneruje
-     * na reĹĄaz, hk potom rastie s poÄŤtom duplicĂ­t); kaĹľdĂ© delenie je O(r log r)
-     * pre r presĂşvanĂ˝ch zĂˇznamov s rovnakĂ˝m kÄľĂşÄŤom.
-     * PamĂ¤ĹĄovĂˇ zloĹľitosĹĄ: O(1) pomocnĂˇ pamĂ¤ĹĄ (iteratĂ­vne, bez rekurzie);
-     * pri blĂ­zkych bodoch pribudne najviac O(maxDepth) novĂ˝ch uzlov.
+     * Časová zložitosť: O(maxDepth + hk), kde hk je výška K-d stromu vo vrchole,
+     * do ktorého sa vkladá (pri rovnakých kľúčoch sa K-d strom degeneruje
+     * na reťaz, hk potom rastie s počtom duplicít); každé delenie je O(r log r)
+     * pre r presúvaných záznamov s rovnakým kľúčom.
+     * Pamäťová zložitosť: O(1) pomocná pamäť (iteratívne, bez rekurzie);
+     * pri blízkych bodoch pribudne najviac O(maxDepth) nových uzlov.
      *
-     * @throws IllegalArgumentException ak bod leĹľĂ­ mimo rozsahu stromu
+     * @throws IllegalArgumentException ak bod leží mimo rozsahu stromu
      */
     public void insert(T data) {
         if (data == null) {
@@ -84,20 +86,20 @@ public class QuadKDTree<T> {
         int depth = 0;
         while (true) {
             if (node.isLeaf()) {
-                // prĂˇzdna oblasĹĄ (iba koreĹ na zaÄŤiatku) alebo list s jednĂ˝m kÄľĂşÄŤom
+                // prázdna oblasť (iba koreň na začiatku) alebo list s jedným kľúčom
                 if (node.hasNoRecords() || hasSameKey(node.getFirstRecord(), data)
                         || depth >= maxDepth) {
                     node.addRecord(data);
                     return;
                 }
-                // oblasĹĄ je plnĂˇ: rozdeÄľ ju a zopakuj pokus o vloĹľenie
+                // oblasť je plná: rozdeľ ju a zopakuj pokus o vloženie
                 split(node);
                 continue;
             }
             int quadrant = getQuadrant(node, data);
             QuadKDNode<T> child = node.getChild(quadrant);
             if (child == null) {
-                // prĂˇzdna oblasĹĄ: uloĹľ zĂˇznam a nastav smernĂ­k na prĂ­sluĹˇnom indexe
+                // prázdna oblasť: ulož záznam a nastav smerník na príslušnom indexe
                 child = createChild(node, quadrant);
                 child.addRecord(data);
                 node.setChild(quadrant, child);
@@ -109,8 +111,8 @@ public class QuadKDTree<T> {
     }
 
     /**
-     * RozdelĂ­ oblasĹĄ na Ĺˇtyri kvadranty a presunie doterajĹˇie
-     * zĂˇznamy do prĂ­sluĹˇnĂ©ho kvadrantu.
+     * Rozdelí oblasť na štyri kvadranty a presunie doterajšie
+     * záznamy do príslušného kvadrantu.
      */
     private void split(QuadKDNode<T> node) {
         node.createChildren();
@@ -120,7 +122,7 @@ public class QuadKDTree<T> {
         node.setChild(quadrant, child);
     }
 
-    /** O(1) â€“ majĂş dva zĂˇznamy rovnakĂ© kÄľĂşÄŤe vo vĹˇetkĂ˝ch dimenziĂˇch? */
+    /** O(1) – majú dva záznamy rovnaké kľúče vo všetkých dimenziách? */
     private boolean hasSameKey(T a, T b) {
         for (int d = 0; d < DIMENSIONS; d++) {
             if (comparator.compare(a, b, d) != 0) {
@@ -131,8 +133,8 @@ public class QuadKDTree<T> {
     }
 
     /**
-     * O(1) â€“ urÄŤĂ­ kvadrant oblasti uzla, do ktorĂ©ho patrĂ­ bod. Hodnoty rovnĂ©
-     * stredu patria do vĂ˝chodnĂ©ho, resp. severnĂ©ho kvadrantu.
+     * O(1) – určí kvadrant oblasti uzla, do ktorého patrí bod. Hodnoty rovné
+     * stredu patria do východného, resp. severného kvadrantu.
      */
     private int getQuadrant(QuadKDNode<T> node, T data) {
         T middle = comparator.middle(node.getLowerBound(), node.getUpperBound());
@@ -144,7 +146,7 @@ public class QuadKDTree<T> {
         return east ? QuadKDNode.SOUTH_EAST : QuadKDNode.SOUTH_WEST;
     }
 
-    /** O(1) â€“ vytvorĂ­ prĂˇzdny uzol s oblasĹĄou zadanĂ©ho kvadrantu uzla. */
+    /** O(1) – vytvorí prázdny uzol s oblasťou zadaného kvadrantu uzla. */
     private QuadKDNode<T> createChild(QuadKDNode<T> node, int quadrant) {
         T lower = node.getLowerBound();
         T upper = node.getUpperBound();
@@ -164,50 +166,50 @@ public class QuadKDTree<T> {
     }
 
     /**
-     * NĂˇjde vĹˇetky zĂˇznamy leĹľiace celĂ© v zadanej oblasti S, t. j. pre kaĹľdĂş
-     * dimenziu d platĂ­: lower[d] <= data[d] <= upper[d] (hranice vrĂˇtane).
+     * Nájde všetky záznamy ležiace celé v zadanej oblasti S, t. j. pre každú
+     * dimenziu d platí: lower[d] <= data[d] <= upper[d] (hranice vrátane).
      *
-     * Postup: od koreĹa sa postupne sprĂ­stupĹujĂş iba oblasti stromu, ktorĂ© sa s S
-     * prekrĂ˝vajĂş. Oblasti, kde S nezasahuje, sa neprehÄľadĂˇvajĂş. V kaĹľdom
-     * navĹˇtĂ­venom uzle, ktorĂ˝ mĂˇ zĂˇznamy, sa intervalovo prehÄľadĂˇ K-d strom
-     * uzla (a nie celĂ˝ zoznam zĂˇznamov).
+     * Postup: od koreňa sa postupne sprístupňujú iba oblasti stromu, ktoré sa s S
+     * prekrývajú. Oblasti, kde S nezasahuje, sa neprehľadávajú. V každom
+     * navštívenom uzle, ktorý má záznamy, sa intervalovo prehľadá K-d strom
+     * uzla (a nie celý zoznam záznamov).
      *
-     * ÄŚasovĂˇ zloĹľitosĹĄ: O(v + sum(Fi)), kde v je poÄŤet navĹˇtĂ­venĂ˝ch uzlov,
-     * ktorĂ˝ch oblasti sa prekrĂ˝vajĂş s S, a Fi je cena intervalovĂ©ho
-     * vyhÄľadĂˇvania v K-d strome i-teho navĹˇtĂ­venĂ©ho uzla (priemerne
-     * O(sqrt(ri) + mi) pre ri zĂˇznamov a mi nĂˇjdenĂ˝ch zĂˇznamov v uzle);
-     * najhorĹˇie O(n), ak S pokrĂ˝va celĂ˝ strom. VĂ˝Ĺˇka Quad stromu je najviac
+     * Časová zložitosť: O(v + sum(Fi)), kde v je počet navštívených uzlov,
+     * ktorých oblasti sa prekrývajú s S, a Fi je cena intervalového
+     * vyhľadávania v K-d strome i-teho navštíveného uzla (priemerne
+     * O(sqrt(ri) + mi) pre ri záznamov a mi nájdených záznamov v uzle);
+     * najhoršie O(n), ak S pokrýva celý strom. Výška Quad stromu je najviac
      * maxDepth.
-     * PamĂ¤ĹĄovĂˇ zloĹľitosĹĄ: O(h) pre explicitnĂ˝ zĂˇsobnĂ­k (nie rekurzia; v kaĹľdom
-     * uzle max. 4 potomkovia, teda zĂˇsobnĂ­k mĂˇ najviac 3h + 1 prvkov) + O(m) pre
-     * vĂ˝sledok, kde m je poÄŤet nĂˇjdenĂ˝ch zĂˇznamov.
+     * Pamäťová zložitosť: O(h) pre explicitný zásobník (nie rekurzia; v každom
+     * uzle max. 4 potomkovia, teda zásobník má najviac 3h + 1 prvkov) + O(m) pre
+     * výsledok, kde m je počet nájdených záznamov.
      *
-     * @param lower dolnĂˇ hranica oblasti S (minimĂˇ v kaĹľdej dimenzii)
-     * @param upper hornĂˇ hranica oblasti S (maximĂˇ v kaĹľdej dimenzii)
-     * @return zoznam vĹˇetkĂ˝ch zĂˇznamov z oblasti S
+     * @param lower dolná hranica oblasti S (minimá v každej dimenzii)
+     * @param upper horná hranica oblasti S (maximá v každej dimenzii)
+     * @return zoznam všetkých záznamov z oblasti S
      */
     public List<T> find(T lower, T upper) {
         List<T> result = new LinkedList<>();
         if (lower == null || upper == null || !overlaps(root, lower, upper)) {
             return result;
         }
-        // ExplicitnĂ˝ zĂˇsobnĂ­k uzlov na spracovanie.
+        // Explicitný zásobník uzlov na spracovanie.
         LinkedList<QuadKDNode<T>> stack = new LinkedList<>();
         stack.push(root);
 
         while (!stack.isEmpty()) {
             QuadKDNode<T> node = stack.pop();
 
-            // intervalovĂ© vyhÄľadĂˇvanie v K-d strome zĂˇznamov uzla
+            // intervalové vyhľadávanie v K-d strome záznamov uzla
             if (!node.hasNoRecords()) {
                 result.addAll(node.findRecords(lower, upper));
             }
 
-            // list nemĂˇ potomkov
+            // list nemá potomkov
             if (node.isLeaf()) {
                 continue;
             }
-            // pridaj na zĂˇsobnĂ­k iba neprĂˇzdnych potomkov, ktorĂ˝ch oblasĹĄ sa prekrĂ˝va s S
+            // pridaj na zásobník iba neprázdnych potomkov, ktorých oblasť sa prekrýva s S
             for (int quadrant = 0; quadrant < QuadKDNode.CHILD_COUNT; quadrant++) {
                 QuadKDNode<T> child = node.getChild(quadrant);
                 if (child != null && overlaps(child, lower, upper)) {
@@ -219,8 +221,8 @@ public class QuadKDTree<T> {
     }
 
     /**
-     * O(1) â€“ prekrĂ˝va sa oblasĹĄ uzla s oblasĹĄou S (hranice vrĂˇtane) v oboch
-     * dimenziĂˇch?
+     * O(1) – prekrýva sa oblasť uzla s oblasťou S (hranice vrátane) v oboch
+     * dimenziách?
      */
     private boolean overlaps(QuadKDNode<T> node, T lower, T upper) {
         for (int d = 0; d < DIMENSIONS; d++) {
@@ -232,7 +234,7 @@ public class QuadKDTree<T> {
         return true;
     }
 
-    /** O(1) â€“ leĹľĂ­ zĂˇznam v oblasti (hranice vrĂˇtane) v oboch dimenziĂˇch? */
+    /** O(1) – leží záznam v oblasti (hranice vrátane) v oboch dimenziách? */
     private boolean isInRegion(T data, T lower, T upper) {
         for (int d = 0; d < DIMENSIONS; d++) {
             if (comparator.compare(data, lower, d) < 0
@@ -243,4 +245,3 @@ public class QuadKDTree<T> {
         return true;
     }
 }
-

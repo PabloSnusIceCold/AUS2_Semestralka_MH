@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda IndexEntry.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 /**
  * Polozka v zozname dostupnych priestorovych indexov (kluc a factory).
  */

@@ -1,21 +1,21 @@
 package stromy;
 
-// Trieda QuadTree.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda QuadTree.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * UniverzĂˇlny Quad strom (bez rekurzie) s operĂˇciami Insert a Find.
- * Ĺ tĂ˝lom zodpovedĂˇ KDTree&lt;T&gt;: porovnĂˇvanie, rozdiel a delenie kÄľĂşÄŤov
- * zabezpeÄŤuje {@link QuadComparator}.
+ * Univerzálny Quad strom (bez rekurzie) s operáciami Insert a Find.
+ * Štýlom zodpovedá KDTree&lt;T&gt;: porovnávanie, rozdiel a delenie kľúčov
+ * zabezpečuje {@link QuadComparator}.
  *
- * KoreĹ reprezentuje celĂş oblasĹĄ zadanĂş na zaÄŤiatku (rozsah kÄľĂşÄŤov).
- * Ak oblasĹĄ obsahuje viac ako 1 zĂˇznam, delĂ­ sa na 4 kvadranty, aĹľ kĂ˝m
- * nie je v kaĹľdej oblasti najviac 1 zĂˇznam, alebo kĂ˝m nie je dosiahnutĂˇ
- * maximĂˇlna povolenĂˇ vĂ˝Ĺˇka stromu (maxDepth). KoreĹ mĂˇ hÄşbku 0.
+ * Koreň reprezentuje celú oblasť zadanú na začiatku (rozsah kľúčov).
+ * Ak oblasť obsahuje viac ako 1 záznam, delí sa na 4 kvadranty, až kým
+ * nie je v každej oblasti najviac 1 záznam, alebo kým nie je dosiahnutá
+ * maximálna povolená výška stromu (maxDepth). Koreň má hĺbku 0.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 public class QuadTree<T> {
     private static final int DIMENSIONS = 2;
@@ -26,13 +26,13 @@ public class QuadTree<T> {
     private final QuadNode<T> root;
 
     /**
-     * @param comparator funkcia porovnĂˇvajĂşca kÄľĂşÄŤe, poÄŤĂ­tajĂşca ich rozdiel
+     * @param comparator funkcia porovnávajúca kľúče, počítajúca ich rozdiel
      *                   a delenie na polovicu
-     * @param lowerBound dolnĂˇ hranica rozsahu kÄľĂşÄŤov (minimĂˇ v oboch dimenziĂˇch)
-     * @param upperBound hornĂˇ hranica rozsahu kÄľĂşÄŤov (maximĂˇ v oboch dimenziĂˇch)
-     * @param maxDepth   maximĂˇlna povolenĂˇ vĂ˝Ĺˇka stromu (hÄşbka uzla, ktorĂ˝ sa eĹˇte
-     *                   smie deliĹĄ, je menĹˇia ako maxDepth); po jej dosiahnutĂ­ sa
-     *                   oblasĹĄ uĹľ nedelĂ­ a zĂˇznam sa pridĂˇ do zoznamu vo vrchole
+     * @param lowerBound dolná hranica rozsahu kľúčov (minimá v oboch dimenziách)
+     * @param upperBound horná hranica rozsahu kľúčov (maximá v oboch dimenziách)
+     * @param maxDepth   maximálna povolená výška stromu (hĺbka uzla, ktorý sa ešte
+     *                   smie deliť, je menšia ako maxDepth); po jej dosiahnutí sa
+     *                   oblasť už nedelí a záznam sa pridá do zoznamu vo vrchole
      */
     public QuadTree(QuadComparator<T> comparator, T lowerBound, T upperBound, int maxDepth) {
         if (maxDepth < 0) {
@@ -52,7 +52,7 @@ public class QuadTree<T> {
     }
 
     /**
-     * VloĹľĂ­ bod do stromu.
+     * Vloží bod do stromu.
      */
     public void insert(T data) {
         if (data == null) {
@@ -66,20 +66,20 @@ public class QuadTree<T> {
         int depth = 0;
         while (true) {
             if (node.isLeaf()) {
-                // prĂˇzdna oblasĹĄ (iba koreĹ na zaÄŤiatku) alebo list s jednĂ˝m zĂˇznamom
+                // prázdna oblasť (iba koreň na začiatku) alebo list s jedným záznamom
                 if (node.getRecords().isEmpty() || hasSameKey(node.getRecords().getFirst(), data)
                         || depth >= maxDepth) {
                     node.getRecords().add(data);
                     return;
                 }
-                // oblasĹĄ je plnĂˇ: rozdeÄľ ju a zopakuj pokus o vloĹľenie
+                // oblasť je plná: rozdeľ ju a zopakuj pokus o vloženie
                 split(node);
                 continue;
             }
             int quadrant = getQuadrant(node, data);
             QuadNode<T> child = node.getChild(quadrant);
             if (child == null) {
-                // prĂˇzdna oblasĹĄ: uloĹľ zĂˇznam a nastav smernĂ­k na prĂ­sluĹˇnom indexe
+                // prázdna oblasť: ulož záznam a nastav smerník na príslušnom indexe
                 child = createChild(node, quadrant);
                 child.getRecords().add(data);
                 node.setChild(quadrant, child);
@@ -91,9 +91,9 @@ public class QuadTree<T> {
     }
 
     /**
-     * RozdelĂ­ oblasĹĄ na Ĺˇtyri kvadranty a presunie doterajĹˇie
-     * zĂˇznamy do prĂ­sluĹˇnĂ©ho kvadrantu.
-     * O(r), kde r je poÄŤet presĂşvanĂ˝ch zĂˇznamov.
+     * Rozdelí oblasť na štyri kvadranty a presunie doterajšie
+     * záznamy do príslušného kvadrantu.
+     * O(r), kde r je počet presúvaných záznamov.
      */
     private void split(QuadNode<T> node) {
         node.createChildren();
@@ -104,7 +104,7 @@ public class QuadTree<T> {
         node.setChild(quadrant, child);
     }
 
-    /** O(1) â€“ majĂş dva zĂˇznamy rovnakĂ© kÄľĂşÄŤe vo vĹˇetkĂ˝ch dimenziĂˇch? */
+    /** O(1) – majú dva záznamy rovnaké kľúče vo všetkých dimenziách? */
     private boolean hasSameKey(T a, T b) {
         for (int d = 0; d < DIMENSIONS; d++) {
             if (comparator.compare(a, b, d) != 0) {
@@ -115,8 +115,8 @@ public class QuadTree<T> {
     }
 
     /**
-     * O(1) â€“ urÄŤĂ­ kvadrant oblasti uzla, do ktorĂ©ho patrĂ­ bod. Hodnoty rovnĂ©
-     * stredu patria do vĂ˝chodnĂ©ho, resp. severnĂ©ho kvadrantu.
+     * O(1) – určí kvadrant oblasti uzla, do ktorého patrí bod. Hodnoty rovné
+     * stredu patria do východného, resp. severného kvadrantu.
      */
     private int getQuadrant(QuadNode<T> node, T data) {
         T middle = comparator.middle(node.getLowerBound(), node.getUpperBound());
@@ -128,7 +128,7 @@ public class QuadTree<T> {
         return east ? QuadNode.SOUTH_EAST : QuadNode.SOUTH_WEST;
     }
 
-    /** O(1) â€“ vytvorĂ­ prĂˇzdny uzol s oblasĹĄou zadanĂ©ho kvadrantu uzla. */
+    /** O(1) – vytvorí prázdny uzol s oblasťou zadaného kvadrantu uzla. */
     private QuadNode<T> createChild(QuadNode<T> node, int quadrant) {
         T lower = node.getLowerBound();
         T upper = node.getUpperBound();
@@ -146,49 +146,49 @@ public class QuadTree<T> {
     }
 
     /**
-     * NĂˇjde vĹˇetky zĂˇznamy leĹľiace celĂ© v zadanej oblasti S, t. j. pre kaĹľdĂş
-     * dimenziu d platĂ­: lower[d] <= data[d] <= upper[d] (hranice vrĂˇtane).
+     * Nájde všetky záznamy ležiace celé v zadanej oblasti S, t. j. pre každú
+     * dimenziu d platí: lower[d] <= data[d] <= upper[d] (hranice vrátane).
      *
-     * Postup: od koreĹa sa postupne sprĂ­stupĹujĂş iba oblasti stromu, ktorĂ© sa s S
-     * prekrĂ˝vajĂş. Oblasti, kde S nezasahuje, sa neprehÄľadĂˇvajĂş. V kaĹľdom
-     * navĹˇtĂ­venom uzle (vnĂştornom aj liste) sa prejde zoznam uloĹľenĂ˝ch zĂˇznamov
-     * a kaĹľdĂ˝ sa skontroluje, ÄŤi patrĂ­ do S.
+     * Postup: od koreňa sa postupne sprístupňujú iba oblasti stromu, ktoré sa s S
+     * prekrývajú. Oblasti, kde S nezasahuje, sa neprehľadávajú. V každom
+     * navštívenom uzle (vnútornom aj liste) sa prejde zoznam uložených záznamov
+     * a každý sa skontroluje, či patrí do S.
      *
-     * ÄŚasovĂˇ zloĹľitosĹĄ: O(v * (1 + r)), kde v je poÄŤet navĹˇtĂ­venĂ˝ch uzlov,
-     * ktorĂ˝ch oblasti sa prekrĂ˝vajĂş s S a r je priemernĂ˝ poÄŤet zĂˇznamov v uzle;
-     * najhorĹˇie O(n), ak S pokrĂ˝va celĂ˝ strom. VĂ˝Ĺˇka je najviac maxDepth.
-     * PamĂ¤ĹĄovĂˇ zloĹľitosĹĄ: O(h) pre explicitnĂ˝ zĂˇsobnĂ­k (nie rekurzia; v kaĹľdom
-     * uzle max. 4 potomkovia, teda zĂˇsobnĂ­k mĂˇ najviac 3h + 1 prvkov) + O(m) pre
-     * vĂ˝sledok, kde m je poÄŤet nĂˇjdenĂ˝ch zĂˇznamov.
+     * Časová zložitosť: O(v * (1 + r)), kde v je počet navštívených uzlov,
+     * ktorých oblasti sa prekrývajú s S a r je priemerný počet záznamov v uzle;
+     * najhoršie O(n), ak S pokrýva celý strom. Výška je najviac maxDepth.
+     * Pamäťová zložitosť: O(h) pre explicitný zásobník (nie rekurzia; v každom
+     * uzle max. 4 potomkovia, teda zásobník má najviac 3h + 1 prvkov) + O(m) pre
+     * výsledok, kde m je počet nájdených záznamov.
      *
-     * @param lower dolnĂˇ hranica oblasti S (minimĂˇ v kaĹľdej dimenzii)
-     * @param upper hornĂˇ hranica oblasti S (maximĂˇ v kaĹľdej dimenzii)
-     * @return zoznam vĹˇetkĂ˝ch zĂˇznamov z oblasti S
+     * @param lower dolná hranica oblasti S (minimá v každej dimenzii)
+     * @param upper horná hranica oblasti S (maximá v každej dimenzii)
+     * @return zoznam všetkých záznamov z oblasti S
      */
     public List<T> find(T lower, T upper) {
         List<T> result = new LinkedList<>();
         if (lower == null || upper == null || !overlaps(root, lower, upper)) {
             return result;
         }
-        // ExplicitnĂ˝ zĂˇsobnĂ­k uzlov na spracovanie.
+        // Explicitný zásobník uzlov na spracovanie.
         LinkedList<QuadNode<T>> stack = new LinkedList<>();
         stack.push(root);
 
         while (!stack.isEmpty()) {
             QuadNode<T> node = stack.pop();
 
-            // skontroluj zĂˇznamy uloĹľenĂ© v uzle (vo vnĂştornom uzle aj v liste)
+            // skontroluj záznamy uložené v uzle (vo vnútornom uzle aj v liste)
             for (T record : node.getRecords()) {
                 if (isInRegion(record, lower, upper)) {
                     result.add(record);
                 }
             }
 
-            // list nemĂˇ potomkov
+            // list nemá potomkov
             if (node.isLeaf()) {
                 continue;
             }
-            // pridaj na zĂˇsobnĂ­k iba neprĂˇzdnych potomkov, ktorĂ˝ch oblasĹĄ sa prekrĂ˝va s S
+            // pridaj na zásobník iba neprázdnych potomkov, ktorých oblasť sa prekrýva s S
             for (int quadrant = 0; quadrant < QuadNode.CHILD_COUNT; quadrant++) {
                 QuadNode<T> child = node.getChild(quadrant);
                 if (child != null && overlaps(child, lower, upper)) {
@@ -200,8 +200,8 @@ public class QuadTree<T> {
     }
 
     /**
-     * O(1) â€“ prekrĂ˝va sa oblasĹĄ uzla s oblasĹĄou S (hranice vrĂˇtane) v oboch
-     * dimenziĂˇch?
+     * O(1) – prekrýva sa oblasť uzla s oblasťou S (hranice vrátane) v oboch
+     * dimenziách?
      */
     private boolean overlaps(QuadNode<T> node, T lower, T upper) {
         for (int d = 0; d < DIMENSIONS; d++) {
@@ -213,7 +213,7 @@ public class QuadTree<T> {
         return true;
     }
 
-    /** O(1) â€“ leĹľĂ­ zĂˇznam v oblasti S (hranice vrĂˇtane) v oboch dimenziĂˇch? */
+    /** O(1) – leží záznam v oblasti S (hranice vrátane) v oboch dimenziách? */
     private boolean isInRegion(T data, T lower, T upper) {
         for (int d = 0; d < DIMENSIONS; d++) {
             if (comparator.compare(data, lower, d) < 0
@@ -224,4 +224,3 @@ public class QuadTree<T> {
         return true;
     }
 }
-

@@ -1,5 +1,7 @@
 package adaptery;
 
+// Trieda SpatialIndex.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import model.GpsPoint;
 import java.util.List;
 
@@ -15,8 +17,8 @@ public interface SpatialIndex {
     void insert(GpsPoint p);
 
     /**
-     * NĂˇjde vsetky body v oblasti ohranicenej bodmi lower a upper
-     * (hranice vratane). Vracia povodne objekty (nie kopie).
+     * Nájde všetky body v oblasti ohraničenej bodmi lower a upper
+     * (hranice vrátane). Vracia pôvodné objekty (nie kópie).
      */
     List<GpsPoint> find(GpsPoint lower, GpsPoint upper);
 

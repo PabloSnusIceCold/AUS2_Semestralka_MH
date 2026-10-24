@@ -1,19 +1,19 @@
 === BENCHMARK VYSLEDKY SPATIAL INDEXOV ===
-Datum a cas: 2026-10-24T13:58:05.902630600
-Konfiguracia: poradie=shuffled, runs=1, warmup=0, verifyAreas=1000
+Datum a cas: 2026-10-24T14:04:01.096986300
+Konfiguracia: poradie=file, runs=1, warmup=0, verifyAreas=1000
 Vstupne data: 1862281 bodov, 100000 testovacich oblasti
 
 Nazov                    | Vkladanie [ms] | Vyhladavanie [ms] | us / oblast | Male / Stredne / Velke [ms] |  Hranice |         Duplicity |   Chyb ref | Chyb 1. str
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Vlastny KDTree           |         1720.2 |            2083.9 |       20.84 |       70.3 / 271.9 / 1741.8 |       OK |         Zachovava |          0 |           0
-Vlastny QuadTree         |         1895.2 |            2724.3 |       27.24 |       33.5 / 128.3 / 2562.5 |       OK |         Zachovava |          0 |           0
-Vlastny QuadKDTree       |         1952.6 |            3441.9 |       34.42 |       33.4 / 139.5 / 3269.0 |       OK |         Zachovava |          0 |           0
-Geo Assist KDTree        |         1960.9 |            2473.5 |       24.74 |       55.7 / 243.5 / 2174.3 |      3/9 |         Zachovava |         76 |          76
-Levy KDTree              |         2074.0 |            1302.7 |       13.03 |       40.5 / 150.7 / 1111.5 |       OK |  Obmedzenie (1/2) |          0 |           0
-Tinspin KDTree           |         1589.2 |            2229.6 |       22.30 |       57.4 / 224.6 / 1947.6 |       OK |         Zachovava |          0 |           0
-Varunpant QuadTree       |         1364.6 |            2402.0 |       24.02 |       31.1 / 101.2 / 2269.7 |       OK |  Obmedzenie (1/2) |          0 |           0
-Tree (Kirsty) QuadTree   |         1661.1 |            2857.4 |       28.57 |       34.5 / 121.0 / 2701.9 |       OK |         Zachovava |          0 |           0
-DanySK FlexibleQuadTree  |         1068.9 |            1120.2 |       11.20 |        54.2 / 129.2 / 936.7 |       OK |         Zachovava |          0 |           0
+Vlastny KDTree           |         1264.1 |            4417.1 |       44.17 |      192.6 / 961.6 / 3262.9 |       OK |         Zachovava |          0 |           0
+Vlastny QuadTree         |          663.7 |            2580.9 |       25.81 |       32.6 / 118.6 / 2429.7 |       OK |         Zachovava |          0 |           0
+Vlastny QuadKDTree       |          736.6 |            3074.9 |       30.75 |       31.7 / 123.0 / 2920.1 |       OK |         Zachovava |          0 |           0
+Geo Assist KDTree        |         1291.2 |            3943.0 |       39.43 |      132.2 / 752.0 / 3058.8 |      3/9 |         Zachovava |         83 |          83
+Levy KDTree              |         3603.4 |            2971.5 |       29.72 |      132.2 / 618.5 / 2220.8 |       OK |  Obmedzenie (1/2) |          0 |           0
+Tinspin KDTree           |          782.2 |            4269.9 |       42.70 |      181.4 / 846.3 / 3242.2 |       OK |         Zachovava |          0 |           0
+Varunpant QuadTree       |          491.3 |            2357.2 |       23.57 |        31.4 / 97.3 / 2228.5 |       OK |  Obmedzenie (1/2) |          0 |           0
+Tree (Kirsty) QuadTree   |          545.4 |            2588.2 |       25.88 |       32.3 / 105.5 / 2450.3 |       OK |         Zachovava |          0 |           0
+DanySK FlexibleQuadTree  |          334.0 |            1049.0 |       10.49 |        49.5 / 119.6 / 880.0 |       OK |         Zachovava |          0 |           0
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Poznamky a obmedzenia struktur:

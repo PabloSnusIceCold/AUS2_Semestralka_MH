@@ -1,28 +1,28 @@
 package stromy;
 
-// Trieda QuadNode.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda QuadNode.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 import java.util.LinkedList;
 
 /**
- * Uzol Quad stromu. Reprezentuje obdÄşĹľnikovĂş oblasĹĄ, ktorej Ĺˇtyria synovia
- * predstavujĂş jej kvadranty:
- * 0. severozĂˇpad, 1. severovĂ˝chod, 2. juhovĂ˝chod, 3. juhozĂˇpad.
- * (Sever = vĂ¤ÄŤĹˇie hodnoty v dimenzii 1, vĂ˝chod = vĂ¤ÄŤĹˇie hodnoty v dimenzii 0.)
+ * Uzol Quad stromu. Reprezentuje obdĺžnikovú oblasť, ktorej štyria synovia
+ * predstavujú jej kvadranty:
+ * 0. severozápad, 1. severovýchod, 2. juhovýchod, 3. juhozápad.
+ * (Sever = väčšie hodnoty v dimenzii 1, východ = väčšie hodnoty v dimenzii 0.)
  *
  * Uzol obsahuje:
- * - POLE so 4 referenciami na potomkov (null = prĂˇzdna oblasĹĄ, alebo list),
- * - sĂşradnice oblasti (dolnĂˇ a hornĂˇ hranica),
- * - LinkedList so zĂˇznamami nachĂˇdzajĂşcimi sa v oblasti.
+ * - POLE so 4 referenciami na potomkov (null = prázdna oblasť, alebo list),
+ * - súradnice oblasti (dolná a horná hranica),
+ * - LinkedList so záznamami nachádzajúcimi sa v oblasti.
  *
- * List stromu reprezentuje jeden zĂˇznam (alebo viac, ak sa oblasĹĄ uĹľ nedĂˇ
- * deliĹĄ)
- * alebo referenciu na prĂˇzdnu oblasĹĄ.
+ * List stromu reprezentuje jeden záznam (alebo viac, ak sa oblasť už nedá
+ * deliť)
+ * alebo referenciu na prázdnu oblasť.
  *
- * PamĂ¤ĹĄovĂˇ nĂˇroÄŤnosĹĄ: O(1) na uzol + O(r) na r zĂˇznamov v zozname.
- * Pole potomkov sa vytvĂˇra aĹľ pri delenĂ­ oblasti, list ho nedrĹľĂ­.
+ * Pamäťová náročnosť: O(1) na uzol + O(r) na r záznamov v zozname.
+ * Pole potomkov sa vytvára až pri delení oblasti, list ho nedrží.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v uzle
+ * @param <T> typ dát uložených v uzle
  */
 class QuadNode<T> {
     static final int NORTH_WEST = 0;
@@ -38,8 +38,8 @@ class QuadNode<T> {
     private QuadNode<T>[] children;
 
     /**
-     * @param lowerBound dolnĂˇ hranica oblasti (minimĂˇ v oboch dimenziĂˇch)
-     * @param upperBound hornĂˇ hranica oblasti (maximĂˇ v oboch dimenziĂˇch)
+     * @param lowerBound dolná hranica oblasti (minimá v oboch dimenziách)
+     * @param upperBound horná hranica oblasti (maximá v oboch dimenziách)
      */
     QuadNode(T lowerBound, T upperBound) {
         this.lowerBound = lowerBound;
@@ -59,12 +59,12 @@ class QuadNode<T> {
         return records;
     }
 
-    /** List nemĂˇ vytvorenĂ© pole potomkov. */
+    /** List nemá vytvorené pole potomkov. */
     boolean isLeaf() {
         return children == null;
     }
 
-    /** VytvorĂ­ pole so 4 referenciami na potomkov (vĹˇetky prĂˇzdne = null). */
+    /** Vytvorí pole so 4 referenciami na potomkov (všetky prázdne = null). */
     @SuppressWarnings("unchecked")
     void createChildren() {
         children = (QuadNode<T>[]) new QuadNode[CHILD_COUNT];
@@ -79,4 +79,3 @@ class QuadNode<T> {
         children[quadrant] = child;
     }
 }
-

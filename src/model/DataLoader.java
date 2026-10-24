@@ -1,5 +1,7 @@
 package model;
 
+// Trieda DataLoader.java bola vygenerovaná pomocou AI modelu Gemini 3.8 Flash
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;

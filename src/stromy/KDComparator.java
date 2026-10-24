@@ -1,21 +1,21 @@
 package stromy;
 
-// Trieda KDComparator.java bola vygenerovanĂˇ pomocou AI (Claude Sonnet 5.5)
+// Trieda KDComparator.java bola vygenerovaná pomocou AI (Claude Sonnet 5.5)
 
 /**
- * PorovnĂˇvacia funkcia pre K-D strom. ZabezpeÄŤuje univerzĂˇlnosĹĄ kÄľĂşÄŤa:
- * strom nepoznĂˇ vnĂştornĂş ĹˇtruktĂşru dĂˇt typu T, iba ich porovnĂˇva v danej
+ * Porovnávacia funkcia pre K-D strom. Zabezpečuje univerzálnosť kľúča:
+ * strom nepozná vnútornú štruktúru dát typu T, iba ich porovnáva v danej
  * dimenzii.
  *
- * @param <T> typ dĂˇt uloĹľenĂ˝ch v strome
+ * @param <T> typ dát uložených v strome
  */
 @FunctionalInterface
 public interface KDComparator<T> {
     /**
-     * PorovnĂˇ dva objekty v zadanej dimenzii (0 .. k-1).
+     * Porovná dva objekty v zadanej dimenzii (0 .. k-1).
      *
-     * @return zĂˇpornĂş hodnotu, nulu alebo kladnĂş hodnotu ak je a menĹˇĂ­,
-     *         rovnĂ˝ alebo vĂ¤ÄŤĹˇĂ­ ako b v dimenzii dimension
+     * @return zápornú hodnotu, nulu alebo kladnú hodnotu ak je a menší,
+     *         rovný alebo väčší ako b v dimenzii dimension
      */
     int compare(T a, T b, int dimension);
 }
